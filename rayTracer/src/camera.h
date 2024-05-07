@@ -1,7 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
 
-
 class Ray {
 public:
 	glm::vec3 origin;
@@ -23,8 +22,8 @@ public:
 		float focalLength = 1.;
 
 		glm::vec3 fixedUp = glm::vec3(0, 1, 0);
-		glm::vec3 front = glm::normalize(direction);
-		glm::vec3 right = -glm::normalize(glm::cross(front, fixedUp));
+		glm::vec3 front =   glm::normalize(direction);
+		glm::vec3 right =  -glm::normalize(glm::cross(front, fixedUp));
 		glm::vec3 up = cross(front, right);
 
 		float h = focalLength * glm::tan(glm::radians(vfov) / 2.);

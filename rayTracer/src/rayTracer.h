@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #include "SDL.h" 
 #include "camera.h"
@@ -15,6 +16,7 @@ public:
 	
 private:
 	bool isRunning;
+	bool isMoving;
 	unsigned int width;
 	unsigned int height;
 
@@ -26,5 +28,6 @@ private:
 	SDL_Window*   gWindow   = nullptr;
 	SDL_Renderer* gRenderer = nullptr;
 	SDL_Surface*  gSurface  = nullptr;
-	SDL_Texture*  gTexture  = nullptr;
+
+	std::vector<glm::vec3> colorBuffer;
 };

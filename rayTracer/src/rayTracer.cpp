@@ -11,8 +11,13 @@ Application::Application(unsigned int width, unsigned height)
 	camera.position  = glm::vec3(0, 0, 1);
 	camera.direction = glm::vec3(0, 0, -1);
 
+	for (int x = 0; x < width; x++) {
+		for (int y = 0; y < height; y++) {
+			colorBuffer.push_back(glm::vec3(0));
+		}
+	}
+
 	initScene();
-	
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
@@ -32,7 +37,6 @@ Application::Application(unsigned int width, unsigned height)
 	}
 
 	gSurface = SDL_GetWindowSurface(gWindow);
-	gTexture = SDL_CreateTextureFromSurface(gRenderer, gSurface);
 
 	SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);	
 
@@ -50,8 +54,6 @@ Application::~Application()
 
 void Application::start()
 {
-	
-
 	Uint32 prevTime = SDL_GetTicks();
 	Uint32 currentTime;
 	float deltaTime;
@@ -62,10 +64,9 @@ void Application::start()
 		while (SDL_PollEvent(&e) != 0)
 		{
 			event(e);
-			
 		}
 		currentTime = SDL_GetTicks();
-		deltaTime = (currentTime - prevTime) / 1000.0f; // Convert to seconds
+		deltaTime = (currentTime - prevTime);
 		prevTime = currentTime;
 
 		frame++;
@@ -84,6 +85,7 @@ void Application::event(SDL_Event& event) {
 		isRunning = false;
 	}
 	if (event.type == SDL_KEYDOWN) {
+		isMoving = true;
 		switch (event.key.keysym.sym)
 		{
 		case SDLK_UP:
@@ -106,6 +108,9 @@ void Application::event(SDL_Event& event) {
 			break;
 		}
 	}
+	else {
+		isMoving = false;
+	}
 }
 
 
@@ -120,24 +125,34 @@ void Application::initScene()
 	s2->r = 0.5;
 	s2->origin = glm::vec3(-1, 0, 0);
 
+	Sphere* s3 = new Sphere;
+	s3->r = 20;
+	s3->origin = glm::vec3(0, 20.5, 0);
+
 	scene.objects.push_back(s);
 	scene.objects.push_back(s2);
+	scene.objects.push_back(s3);
 }
 
 
 void Application::loop(float dt) {
 	//printf("%f\n", dt);
-	
-	
-
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
 			Ray ray = camera.getRay(glm::vec2(x, y));
-			glm::vec3 color = glm::clamp(render(ray, scene),0.f,1.f);
+			if (isMoving) {
+				colorBuffer[y * width + x] = glm::clamp(render(ray, scene), 0.f, 1.f);
+				frame = 1;
+			}else
+			{
+				colorBuffer[y * width + x] += glm::clamp(render(ray, scene), 0.f, 1.f);
+			}
 			Uint32* pixel = (Uint32*)((Uint8*)gSurface->pixels + y * gSurface->pitch + x * sizeof(Uint32));
-			*pixel = SDL_MapRGB(gSurface->format, color.x * 255, color.y * 255,  color.z * 255);
+			*pixel = SDL_MapRGB(gSurface->format,
+				colorBuffer[y * width + x].x * 255.f / frame,
+				colorBuffer[y * width + x].y * 255.f / frame,
+				colorBuffer[y * width + x].z * 255.f / frame);
 		}
 	}
-	SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
 
 }
