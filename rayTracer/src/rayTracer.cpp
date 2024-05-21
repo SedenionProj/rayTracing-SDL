@@ -120,14 +120,17 @@ void Application::initScene()
 	Sphere* s = new Sphere;
 	s->r = 0.5;
 	s->origin = glm::vec3(1,0,0);
+	s->material = std::make_shared<Diffuse>(glm::vec3(1, 0, 1));
 
 	Sphere* s2 = new Sphere;
 	s2->r = 0.5;
 	s2->origin = glm::vec3(-1, 0, 0);
+	s2->material = std::make_shared<Diffuse>(glm::vec3(1, 1, 0));
 
 	Sphere* s3 = new Sphere;
 	s3->r = 20;
 	s3->origin = glm::vec3(0, 20.5, 0);
+	s3->material = std::make_shared<Diffuse>(glm::vec3(0, 1, 1));
 
 	scene.objects.push_back(s);
 	scene.objects.push_back(s2);

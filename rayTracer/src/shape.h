@@ -2,17 +2,21 @@
 #include <vector>
 
 #include "camera.h"
+#include "material.h"
 
 struct HitInfo {
-    float t;
-    glm::vec3 pos;
-    glm::vec3 normal;
+	float t;
+	glm::vec3 pos;
+	glm::vec3 normal;
+	std::shared_ptr<Material> material;
 };
 
 class Object
 {
 public:
 	virtual bool intersect(Ray& ray, HitInfo& rec) = 0;
+public:
+    std::shared_ptr<Material> material;
 };
 
 inline glm::vec3 orientNormal(glm::vec3& normal, glm::vec3& direction) {
@@ -35,9 +39,9 @@ public:
         float sqrtd = sqrt(discriminant);
 
         float root = (-half_b - sqrtd) / a;
-        if (root < 0.01 || 999999 < root) {
+        if (root < 0.01 || MAX_FLOAT < root) {
             root = (-half_b + sqrtd) / a;
-            if (root < 0.01 || 999999 < root) {
+            if (root < 0.01 || MAX_FLOAT < root) {
                 return false;
             }
         }
@@ -62,13 +66,14 @@ public:
     bool intersect(Ray& ray, HitInfo& rec) {
         bool hit = false;
         HitInfo closestHit;
-        float closestT = 999999;
+        float closestT = MAX_FLOAT;
         for (Object* obj : objects) {
             if (obj->intersect(ray, closestHit)) {
                 hit = true;
                 if (closestHit.t < closestT) {
 					closestT = rec.t;
 					rec = closestHit;
+                    rec.material = obj->material;
                 }
             };
         }
