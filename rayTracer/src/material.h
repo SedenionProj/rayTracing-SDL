@@ -16,11 +16,6 @@ public:
 		m_color = color;
 	}
 
-	glm::vec3 getBSDF(glm::vec3 wo, glm::vec3 wi, HitInfo& rec) override {
-		if (glm::dot(wi, wi) < 0) {
-			return glm::vec3(0);
-		}
-		return m_color / PI;
-	};
+	glm::vec3 getBSDF(glm::vec3 wo, glm::vec3 wi, HitInfo& rec) override;
 
 };

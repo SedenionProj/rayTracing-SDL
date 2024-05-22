@@ -1,8 +1,11 @@
 #pragma once
 #include <vector>
+#include <iostream>
 
 #include "camera.h"
 #include "material.h"
+
+class Material;
 
 struct HitInfo {
 	float t;
@@ -27,33 +30,7 @@ inline glm::vec3 orientNormal(glm::vec3& normal, glm::vec3& direction) {
 
 class Sphere : public Object {
 public:
-    bool intersect(Ray& ray, HitInfo& rec) override {
-        glm::vec3 oc = ray.origin - origin;
-        float a = glm::dot(ray.direction, ray.direction);
-        float half_b = glm::dot(oc, ray.direction);
-        float c = dot(oc, oc) - r * r;
-        float discriminant = half_b * half_b - a * c;
-        if (discriminant < 0.0) {
-            return false;
-        }
-        float sqrtd = sqrt(discriminant);
-
-        float root = (-half_b - sqrtd) / a;
-        if (root < 0.01 || MAX_FLOAT < root) {
-            root = (-half_b + sqrtd) / a;
-            if (root < 0.01 || MAX_FLOAT < root) {
-                return false;
-            }
-        }
-        glm::vec3 p = ray.at(root);
-        glm::vec3 normal = (p - origin) / r;
-
-        rec.t = root;
-        rec.pos = p;
-        rec.normal = orientNormal(normal, ray.direction);
-
-        return true;
-    }
+    bool intersect(Ray& ray, HitInfo& rec) override;
     
     float r;
     glm::vec3 origin;
@@ -63,22 +40,7 @@ public:
 
 class Scene {
 public:
-    bool intersect(Ray& ray, HitInfo& rec) {
-        bool hit = false;
-        HitInfo closestHit;
-        float closestT = MAX_FLOAT;
-        for (Object* obj : objects) {
-            if (obj->intersect(ray, closestHit)) {
-                hit = true;
-                if (closestHit.t < closestT) {
-					closestT = rec.t;
-					rec = closestHit;
-                    rec.material = obj->material;
-                }
-            };
-        }
-        return hit;
-    }
+    bool intersect(Ray& ray, HitInfo& rec);
 
     std::vector<Object*> objects;
 };

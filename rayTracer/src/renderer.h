@@ -5,13 +5,6 @@
 #include "shape.h"
 #include "sample.h"
 
-inline glm::vec3 getRay(glm::vec3 n) {
-	float a = (rand() % 10000 - 5000.f) / 10000.f;
-	float b = (rand() % 10000 - 5000.f) / 10000.f;
-	float c = (rand() % 10000 - 5000.f) / 10000.f;
-    return n + glm::normalize(glm::vec3(a, b, c));
-}
-
 glm::vec3 render(Ray& ray, Scene& scene) {
     HitInfo rec;
     
@@ -29,7 +22,7 @@ glm::vec3 render(Ray& ray, Scene& scene) {
             return glm::vec3(0);
         }
 
-        col *= fcos*4.f*PI*200.f;
+        col *= fcos*4.f*PI;
         ray.direction = wp;
         //ray.direction = glm::reflect(ray.direction, rec.normal);
         ray.origin = rec.pos;

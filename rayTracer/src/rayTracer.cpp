@@ -88,22 +88,25 @@ void Application::event(SDL_Event& event) {
 		isMoving = true;
 		switch (event.key.keysym.sym)
 		{
-		case SDLK_UP:
+		case SDLK_z:
 			camera.position+=glm::vec3(0,0,0.1);
 			break;
 
-		case SDLK_DOWN:
+		case SDLK_s:
 			camera.position += glm::vec3(0, 0, -0.1);
 			break;
 
-		case SDLK_LEFT:
+		case SDLK_q:
 			camera.position += glm::vec3(-0.1, 0,0 );
 			break;
-
-		case SDLK_RIGHT:
+		case SDLK_d:
 			camera.position += glm::vec3(0.1, 0, 0);
 			break;
-
+		case SDLK_SPACE:
+			camera.position += glm::vec3(0, 0.1, 0);
+			break;
+		case SDLK_LSHIFT:
+			camera.position += glm::vec3(0, -0.1, 0);
 		default:
 			break;
 		}
@@ -149,6 +152,7 @@ void Application::loop(float dt) {
 			}else
 			{
 				colorBuffer[y * width + x] += glm::clamp(render(ray, scene), 0.f, 1.f);
+
 			}
 			Uint32* pixel = (Uint32*)((Uint8*)gSurface->pixels + y * gSurface->pitch + x * sizeof(Uint32));
 			*pixel = SDL_MapRGB(gSurface->format,
