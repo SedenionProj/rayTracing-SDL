@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include "rayTracer.h"
 #include "renderer.h"
-
+#include <memory.h>
+#include "spectrum.h"
 
 Application::Application(unsigned int width, unsigned height)
 	:width(width), height(height), isRunning(true)
@@ -116,24 +117,22 @@ void Application::event(SDL_Event& event) {
 	}
 }
 
-
-
 void Application::initScene()
 {
 	Sphere* s = new Sphere;
 	s->r = 0.5;
 	s->origin = glm::vec3(1,0,0);
-	s->material = std::make_shared<Diffuse>(glm::vec3(1, 0, 1));
+	s->material = std::make_shared<Diffuse>(glm::vec3(1, 0, 1), Cyan);
 
 	Sphere* s2 = new Sphere;
 	s2->r = 0.5;
 	s2->origin = glm::vec3(-1, 0, 0);
-	s2->material = std::make_shared<Diffuse>(glm::vec3(1, 1, 0));
+	s2->material = std::make_shared<Diffuse>(glm::vec3(1, 1, 0), Magenta);
 
 	Sphere* s3 = new Sphere;
 	s3->r = 20;
 	s3->origin = glm::vec3(0, 20.5, 0);
-	s3->material = std::make_shared<Diffuse>(glm::vec3(0, 1, 1));
+	s3->material = std::make_shared<Diffuse>(glm::vec3(0, 1, 1), Yellow);
 
 	scene.objects.push_back(s);
 	scene.objects.push_back(s2);
@@ -147,19 +146,17 @@ void Application::loop(float dt) {
 		for (int y = 0; y < height; y++) {
 			Ray ray = camera.getRay(glm::vec2(x, y));
 			if (isMoving) {
-				colorBuffer[y * width + x] = glm::clamp(render(ray, scene), 0.f, 1.f);
+				colorBuffer[y * width + x] = renderPixel(ray, scene);
 				frame = 1;
 			}else
 			{
-				colorBuffer[y * width + x] += glm::clamp(render(ray, scene), 0.f, 1.f);
-
+				colorBuffer[y * width + x] += renderPixel(ray, scene);
 			}
 			Uint32* pixel = (Uint32*)((Uint8*)gSurface->pixels + y * gSurface->pitch + x * sizeof(Uint32));
 			*pixel = SDL_MapRGB(gSurface->format,
-				colorBuffer[y * width + x].x * 255.f / frame,
-				colorBuffer[y * width + x].y * 255.f / frame,
-				colorBuffer[y * width + x].z * 255.f / frame);
+				glm::clamp(colorBuffer[y * width + x].x / frame, 0.f, 1.f) * 255.f,
+				glm::clamp(colorBuffer[y * width + x].y / frame, 0.f, 1.f) * 255.f,
+				glm::clamp(colorBuffer[y * width + x].z / frame, 0.f, 1.f) * 255.f);
 		}
 	}
-
 }
