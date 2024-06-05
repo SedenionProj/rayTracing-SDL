@@ -10,6 +10,8 @@ public:
 	Application(unsigned int width, unsigned height);
 	~Application();
 	void start();
+
+private:
 	void event(SDL_Event& event);
 	void loop(float dt);
 	void initScene();
@@ -19,7 +21,6 @@ private:
 	bool isMoving;
 	unsigned int width;
 	unsigned int height;
-
 	unsigned int frame = 0;
 
 	Camera camera;

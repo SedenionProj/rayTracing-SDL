@@ -6,15 +6,9 @@
 #include "utils/sample.h"
 #include "spectrum.h"
 
-glm::mat3 xyz_to_rgb = glm::mat3(
-    glm::vec3(3.2406, -0.9689, 0.0557),
-    glm::vec3(-1.5372, 1.8758, -0.2040),
-    glm::vec3(-0.4986, 0.0415, 1.0570));
-
 glm::vec3 renderPixel(Ray& ray, Scene& scene) {
     HitInfo rec;
     
-    //glm::vec3 col = glm::vec3(1);
     float col = 1;
 
     WaveLength lambda;
@@ -25,7 +19,7 @@ glm::vec3 renderPixel(Ray& ray, Scene& scene) {
             float y = Y(lambda.lambda);
             float z = Z(lambda.lambda);
 
-			return xyz_to_rgb*col* glm::vec3(x, y, z)*glm::vec3(2.);
+			return col* glm::vec3(x, y, z) * light(lambda.lambda);
 		}
 
         glm::vec3 wp = SampleUniformSphere();
@@ -35,11 +29,9 @@ glm::vec3 renderPixel(Ray& ray, Scene& scene) {
             return glm::vec3(0);
         }
 
-        
         col *= fcos*4.f*PI;
 
         ray.direction = wp;
-        //ray.direction = glm::reflect(ray.direction, rec.normal);
         ray.origin = rec.pos;
     }
 

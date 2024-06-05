@@ -5,19 +5,8 @@
 #include "spectrum.h"
 
 Application::Application(unsigned int width, unsigned height)
-	:width(width), height(height), isRunning(true)
-{
-	camera.resolution = glm::vec2(width, height);
-	camera.vfov = 90;
-	camera.position  = glm::vec3(0, 0, 1);
-	camera.direction = glm::vec3(0, 0, -1);
-
-	for (int x = 0; x < width; x++) {
-		for (int y = 0; y < height; y++) {
-			colorBuffer.push_back(glm::vec3(0));
-		}
-	}
-
+	:width(width), height(height), isRunning(true),
+	colorBuffer(width*height, glm::vec3(0)) {
 	initScene();
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -25,7 +14,7 @@ Application::Application(unsigned int width, unsigned height)
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 	}
 
-	gWindow = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_SHOWN);
+	gWindow = SDL_CreateWindow("Ray Tracer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_SHOWN);
 	if (gWindow == NULL)
 	{
 		printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
@@ -40,12 +29,9 @@ Application::Application(unsigned int width, unsigned height)
 	gSurface = SDL_GetWindowSurface(gWindow);
 
 	SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);	
-
-
 }
 
-Application::~Application()
-{
+Application::~Application() {
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);
 	gWindow = NULL;
@@ -53,17 +39,14 @@ Application::~Application()
 	SDL_Quit();
 }
 
-void Application::start()
-{
+void Application::start() {
 	Uint32 prevTime = SDL_GetTicks();
 	Uint32 currentTime;
 	float deltaTime;
 
 	SDL_Event e;
-	while (isRunning)
-	{
-		while (SDL_PollEvent(&e) != 0)
-		{
+	while (isRunning) {
+		while (SDL_PollEvent(&e) != 0) {
 			event(e);
 		}
 		currentTime = SDL_GetTicks();
@@ -81,22 +64,18 @@ void Application::start()
 
 void Application::event(SDL_Event& event) {
 	
-	if (event.type == SDL_QUIT)
-	{
+	if (event.type == SDL_QUIT) {
 		isRunning = false;
 	}
 	if (event.type == SDL_KEYDOWN) {
 		isMoving = true;
-		switch (event.key.keysym.sym)
-		{
+		switch (event.key.keysym.sym) {
 		case SDLK_z:
 			camera.position+=glm::vec3(0,0,0.1);
 			break;
-
 		case SDLK_s:
 			camera.position += glm::vec3(0, 0, -0.1);
 			break;
-
 		case SDLK_q:
 			camera.position += glm::vec3(-0.1, 0,0 );
 			break;
@@ -108,8 +87,6 @@ void Application::event(SDL_Event& event) {
 			break;
 		case SDLK_LSHIFT:
 			camera.position += glm::vec3(0, -0.1, 0);
-		default:
-			break;
 		}
 	}
 	else {
@@ -117,46 +94,55 @@ void Application::event(SDL_Event& event) {
 	}
 }
 
-void Application::initScene()
-{
+void Application::initScene() {
+	camera.resolution = glm::vec2(width, height);
+	camera.vfov = 90;
+	camera.position = glm::vec3(0, 0, 1);
+	camera.direction = glm::vec3(0, 0, -1);
+
 	Sphere* s = new Sphere;
+	SampledSpectrum* spec = new SampledSpectrum(glm::vec3(1, 1, 0));
 	s->r = 0.5;
 	s->origin = glm::vec3(1,0,0);
-	s->material = std::make_shared<Diffuse>(glm::vec3(1, 0, 1), Cyan);
+	s->material = std::make_shared<Diffuse>(*spec);
 
 	Sphere* s2 = new Sphere;
 	s2->r = 0.5;
 	s2->origin = glm::vec3(-1, 0, 0);
-	s2->material = std::make_shared<Diffuse>(glm::vec3(1, 1, 0), Magenta);
+	s2->material = std::make_shared<Diffuse>(green);
 
 	Sphere* s3 = new Sphere;
 	s3->r = 20;
 	s3->origin = glm::vec3(0, 20.5, 0);
-	s3->material = std::make_shared<Diffuse>(glm::vec3(0, 1, 1), Yellow);
+	s3->material = std::make_shared<Diffuse>(red);
 
 	scene.objects.push_back(s);
 	scene.objects.push_back(s2);
 	scene.objects.push_back(s3);
 }
 
+glm::mat3 xyz_to_rgb = glm::mat3(
+	glm::vec3(3.2406, -0.9689, 0.0557),
+	glm::vec3(-1.5372, 1.8758, -0.2040),
+	glm::vec3(-0.4986, 0.0415, 1.0570));
 
 void Application::loop(float dt) {
-	//printf("%f\n", dt);
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
 			Ray ray = camera.getRay(glm::vec2(x, y));
 			if (isMoving) {
 				colorBuffer[y * width + x] = renderPixel(ray, scene);
 				frame = 1;
-			}else
-			{
+			} else {
 				colorBuffer[y * width + x] += renderPixel(ray, scene);
 			}
 			Uint32* pixel = (Uint32*)((Uint8*)gSurface->pixels + y * gSurface->pitch + x * sizeof(Uint32));
+			glm::vec3 rgb_color = xyz_to_rgb * (colorBuffer[y * width + x] / (float)frame);
+			rgb_color = glm::pow(rgb_color, glm::vec3(1.0 / 2.2));
 			*pixel = SDL_MapRGB(gSurface->format,
-				glm::clamp(colorBuffer[y * width + x].x / frame, 0.f, 1.f) * 255.f,
-				glm::clamp(colorBuffer[y * width + x].y / frame, 0.f, 1.f) * 255.f,
-				glm::clamp(colorBuffer[y * width + x].z / frame, 0.f, 1.f) * 255.f);
+				glm::clamp(rgb_color.x, 0.f, 1.f) * 255.f,
+				glm::clamp(rgb_color.y, 0.f, 1.f) * 255.f,
+				glm::clamp(rgb_color.z, 0.f, 1.f) * 255.f);
 		}
 	}
 }

@@ -3,7 +3,6 @@
 
 float Diffuse::getBSDF(glm::vec3 wo, glm::vec3 wi, HitInfo& rec,WaveLength lambda)
 {
-	rec.normal;
 	if (glm::dot(wi, rec.normal) < 0) {
 		return 0;
 	}

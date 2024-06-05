@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include "utils/sample.h"
 
 class Ray {
 public:
@@ -28,12 +29,24 @@ public:
 
 		float h = focalLength * glm::tan(glm::radians(vfov) / 2.);
  
-		glm::vec2 uv = 2.f * pixelCoord / resolution - 1.f;
+		glm::vec2 uv = 2.f * (pixelCoord+ antiAliasingOffset()) / resolution - 1.f;
 		uv.x *= resolution.x / resolution.y;
 
 		Ray ray;
 		ray.origin = position;		
-		ray.direction = glm::normalize(h * uv.x * right + h * uv.y * up + front * focalLength);
+		ray.direction = glm::normalize(
+			h * uv.x * right + 
+			h * uv.y * up + 
+			front * focalLength);
 		return ray;
 	}
+
+private:
+	glm::vec2 antiAliasingOffset() {
+		return glm::vec2(
+			randomUniform() - 0.5,
+			randomUniform() - 0.5
+		);
+	}
+
 };
