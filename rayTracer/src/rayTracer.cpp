@@ -119,6 +119,8 @@ void Application::initScene() {
 	scene.objects.push_back(s);
 	scene.objects.push_back(s2);
 	scene.objects.push_back(s3);
+
+	scene.sky = new Sky(5000, 10);
 }
 
 glm::mat3 xyz_to_rgb = glm::mat3(

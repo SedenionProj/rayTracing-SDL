@@ -19,7 +19,7 @@ glm::vec3 renderPixel(Ray& ray, Scene& scene) {
             float y = Y(lambda.lambda);
             float z = Z(lambda.lambda);
 
-			return col* glm::vec3(x, y, z) * light(lambda.lambda);
+            return col * glm::vec3(x, y, z) * scene.sky->Le(lambda.lambda);//light(lambda.lambda);
 		}
 
         glm::vec3 wp = SampleUniformSphere();

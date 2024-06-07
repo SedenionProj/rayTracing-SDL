@@ -4,6 +4,7 @@
 
 #include "camera.h"
 #include "material.h"
+#include "spectrum.h"
 
 class Material;
 
@@ -37,10 +38,23 @@ public:
 
 };
 
+class Sky {
+public:
+    Sky(float T, float power) :
+        m_spec(new BlackBodySpectrum(T)), m_power(power) {}
+
+    float Le(float lambda) {
+        return m_power * (*m_spec)(lambda);
+    }
+private:
+    float m_power;
+    Spectrum* m_spec;
+};
 
 class Scene {
 public:
     bool intersect(Ray& ray, HitInfo& rec);
 
+    Sky* sky;
     std::vector<Object*> objects;
 };

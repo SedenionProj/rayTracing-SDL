@@ -99,7 +99,7 @@ public:
 		}
 	}
 
-	float operator()(float lambda) const  override {
+	float operator()(float lambda) const override {
 		auto val = std::upper_bound(m_lambda.begin(), m_lambda.end(), lambda);
 		size_t index = val - m_lambda.begin();
 		if (index < 0 || index>31)
@@ -155,6 +155,34 @@ public:
 
 private:
 
+};
+
+class BlackBodySpectrum : public Spectrum {
+public:
+	BlackBodySpectrum(float T):
+		m_T(T) {
+		float lambdaMax = 2.8977721e-3f / T;
+		m_normalizeFactor = 1 / blackbody(lambdaMax * 1e9f, T);
+	}
+
+	float operator()(float lambda) const override {
+		return blackbody(lambda, m_T) * m_normalizeFactor;
+	}
+
+private:
+	float blackbody(float lambda, float T) const {
+		if (T <= 0) return 0;
+		const float c = 299792458.f;
+		const float h = 6.62606957e-34f;
+		const float kb = 1.3806488e-23f;
+		float l = lambda * 1e-9f;
+		float Le = (2 * h * c * c) /
+			(glm::pow(l,5) * (glm::exp((h * c) / (l * kb * T)) - 1));
+		return Le;
+	}
+
+	float m_T;
+	float m_normalizeFactor;
 };
 
 class WaveLength {
