@@ -1,8 +1,7 @@
 #include "shape.h"
 #include "material.h"
 
-bool Sphere::intersect(Ray& ray, HitInfo& rec)
-{
+bool Sphere::intersect(Ray& ray, HitInfo& rec) {
 	glm::vec3 oc = ray.origin - origin;
 	float a = glm::dot(ray.direction, ray.direction);
 	float half_b = glm::dot(oc, ray.direction);
@@ -30,8 +29,7 @@ bool Sphere::intersect(Ray& ray, HitInfo& rec)
 	return true;
 }
 
-bool Scene::intersect(Ray& ray, HitInfo& rec)
-{
+bool Scene::intersect(Ray& ray, HitInfo& rec) {
 	bool hit = false;
 	HitInfo closestHit;
 	float closestT = MAX_FLOAT;
@@ -42,6 +40,7 @@ bool Scene::intersect(Ray& ray, HitInfo& rec)
 				closestT = closestHit.t;
 				rec = closestHit;
 				rec.material = obj->material;
+				rec.light = obj->light;
 			}
 		};
 	}

@@ -14,7 +14,7 @@ Application::Application(unsigned int width, unsigned height)
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 	}
 
-	gWindow = SDL_CreateWindow("Ray Tracer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_SHOWN);
+	gWindow = SDL_CreateWindow("Ray Tracer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
 	if (gWindow == NULL)
 	{
 		printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
@@ -101,26 +101,29 @@ void Application::initScene() {
 	camera.direction = glm::vec3(0, 0, -1);
 
 	Sphere* s = new Sphere;
-	SampledSpectrum* spec = new SampledSpectrum(glm::vec3(1, 1, 0));
+	SampledSpectrum* spec = new SampledSpectrum(glm::vec3(1, 0, 0));
 	s->r = 0.5;
-	s->origin = glm::vec3(1,0,0);
+	s->origin = glm::vec3(0.2,0,0);
 	s->material = std::make_shared<Diffuse>(*spec);
+	s->light = std::make_shared<AreaLight>(5000, 10.f);
 
 	Sphere* s2 = new Sphere;
+	SampledSpectrum* spec1 = new SampledSpectrum(glm::vec3(0, 1, 0));
 	s2->r = 0.5;
 	s2->origin = glm::vec3(-1, 0, 0);
-	s2->material = std::make_shared<Diffuse>(green);
+	s2->material = std::make_shared<Diffuse>(*spec1);
 
 	Sphere* s3 = new Sphere;
+	SampledSpectrum* spec2 = new SampledSpectrum(glm::vec3(0.8));
 	s3->r = 20;
 	s3->origin = glm::vec3(0, 20.5, 0);
-	s3->material = std::make_shared<Diffuse>(red);
+	s3->material = std::make_shared<Diffuse>(*spec2);
 
 	scene.objects.push_back(s);
 	scene.objects.push_back(s2);
 	scene.objects.push_back(s3);
 
-	scene.sky = new Sky(5000, 10);
+	scene.sky = new Sky(3000, 0.f);
 }
 
 glm::mat3 xyz_to_rgb = glm::mat3(

@@ -5,6 +5,7 @@
 #include "camera.h"
 #include "material.h"
 #include "spectrum.h"
+#include "light.h"
 
 class Material;
 
@@ -13,6 +14,12 @@ struct HitInfo {
 	glm::vec3 pos;
 	glm::vec3 normal;
 	std::shared_ptr<Material> material;
+    std::shared_ptr<AreaLight> light;
+    float Le(float lambda) {
+        if (!light)
+            return 0;
+        return light->Le(lambda);
+    }
 };
 
 class Object
@@ -21,6 +28,7 @@ public:
 	virtual bool intersect(Ray& ray, HitInfo& rec) = 0;
 public:
     std::shared_ptr<Material> material;
+    std::shared_ptr<AreaLight> light;
 };
 
 inline glm::vec3 orientNormal(glm::vec3& normal, glm::vec3& direction) {
@@ -36,19 +44,6 @@ public:
     float r;
     glm::vec3 origin;
 
-};
-
-class Sky {
-public:
-    Sky(float T, float power) :
-        m_spec(new BlackBodySpectrum(T)), m_power(power) {}
-
-    float Le(float lambda) {
-        return m_power * (*m_spec)(lambda);
-    }
-private:
-    float m_power;
-    Spectrum* m_spec;
 };
 
 class Scene {

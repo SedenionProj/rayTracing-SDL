@@ -51,12 +51,10 @@ private:
 class SampledSpectrum : public Spectrum {
 public:
 	SampledSpectrum(int n)
-		: m_lambda(n, 0), m_values(n, 0) {}
+		: m_lambda(n, 0), m_values(n, 1) {}
 
 	SampledSpectrum(const float* lambda, const float* value, int n)
 		: m_lambda(lambda, lambda + n), m_values(value, value + n) {}
-
-
 
 	SampledSpectrum(const glm::vec3& rgb)
 		: m_lambda(RGBRefl2SpectWhite.m_lambda),
@@ -118,26 +116,28 @@ public:
 		return *this;
 	}
 
-	SampledSpectrum operator*(float c) {
-		return *this *= c;
-	}
-
-	friend SampledSpectrum operator*(float c, SampledSpectrum& spectrum) {
-		return spectrum*=c;
-	}
-
 	SampledSpectrum& operator+=(const SampledSpectrum& spec) {
-		for (int i = 0; i< m_lambda.size(); i++) {
+		for (int i = 0; i < m_lambda.size(); i++) {
 			m_values[i] += spec[i];
 		}
 		return *this;
 	}
 
-	SampledSpectrum operator+(const SampledSpectrum& spec) {
-		return *this += spec;
+	SampledSpectrum operator*(float c) const {
+		SampledSpectrum spec = *this;
+		return spec *= c;
 	}
 
+	friend SampledSpectrum operator*(float c,const SampledSpectrum& spectrum) {
+		SampledSpectrum spec = spectrum;
+		return spec *=c;
+	}
 	
+	SampledSpectrum operator+(const SampledSpectrum& spectrum) {
+		SampledSpectrum spec = *this;
+		return *this += spectrum;
+	}
+
 public:
 	std::vector<float> m_lambda;
 	std::vector<float> m_values;

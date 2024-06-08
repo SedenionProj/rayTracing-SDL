@@ -29,7 +29,7 @@ public:
 
 		float h = focalLength * glm::tan(glm::radians(vfov) / 2.);
  
-		glm::vec2 uv = 2.f * (pixelCoord+ antiAliasingOffset()) / resolution - 1.f;
+		glm::vec2 uv = 2.f * (pixelCoord+ antiAliasingOffset()*4.f) / resolution - 1.f;
 		uv.x *= resolution.x / resolution.y;
 
 		Ray ray;
