@@ -9,7 +9,11 @@ class Application {
 public:
 	Application(unsigned int width, unsigned height);
 	~Application();
+
 	void start();
+
+	Application& operator=(const Application&) = delete;
+	Application(const Application&) = delete;
 
 private:
 	void event(SDL_Event& event);
@@ -29,6 +33,4 @@ private:
 	SDL_Window*   gWindow   = nullptr;
 	SDL_Renderer* gRenderer = nullptr;
 	SDL_Surface*  gSurface  = nullptr;
-
-	std::vector<glm::vec3> colorBuffer;
 };

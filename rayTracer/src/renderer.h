@@ -36,10 +36,8 @@ float naivePathTracer(HitInfo& rec, Scene& scene, const WaveLength& lambda, Ray&
 float naivePathTracerRecursive(HitInfo& rec, Scene& scene, const WaveLength& lambda, Ray& ray, int depth) {
 
 		if (!scene.intersect(ray, rec)) {
-			return scene.sky->Le(lambda.lambda); //light(lambda.lambda);
+ 			return scene.sky->Le(lambda.lambda);
 		}
-
-		
 
 		float Le = rec.Le(lambda.lambda);
 
@@ -48,6 +46,7 @@ float naivePathTracerRecursive(HitInfo& rec, Scene& scene, const WaveLength& lam
 		}
 
 		glm::vec3 wp = SampleUniformSphere();
+
 		float fcos = rec.material->getBSDF(-ray.direction, wp, rec, lambda) * glm::abs(glm::dot(wp, rec.normal));
 
 		if (fcos == 0) {

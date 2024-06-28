@@ -1,6 +1,11 @@
 #include "shape.h"
 #include "material.h"
 
+Sphere::Sphere(const glm::vec3& origin, const float radius)
+	: origin(origin), r(radius){
+	boundingBox = AABB(origin - radius, origin + radius);
+}
+
 bool Sphere::intersect(Ray& ray, HitInfo& rec) {
 	glm::vec3 oc = ray.origin - origin;
 	float a = glm::dot(ray.direction, ray.direction);
@@ -25,24 +30,16 @@ bool Sphere::intersect(Ray& ray, HitInfo& rec) {
 	rec.normal = orientNormal(normal, ray.direction);
 	rec.t = root;
 	rec.pos = p;
-	
+	rec.material = material;
+	rec.light = light;
+
 	return true;
 }
 
 bool Scene::intersect(Ray& ray, HitInfo& rec) {
-	bool hit = false;
-	HitInfo closestHit;
-	float closestT = MAX_FLOAT;
-	for (Object* obj : objects) {
-		if (obj->intersect(ray, closestHit)) {
-			hit = true;
-			if (closestHit.t < closestT) {
-				closestT = closestHit.t;
-				rec = closestHit;
-				rec.material = obj->material;
-				rec.light = obj->light;
-			}
-		};
-	}
-	return hit;
+	return bvh->intersect(ray, rec);
+}
+
+void Scene::build() {
+	bvh = std::make_unique<BVHNode>(objects, 0, objects.size());
 }

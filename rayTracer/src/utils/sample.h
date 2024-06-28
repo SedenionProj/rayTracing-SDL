@@ -10,6 +10,10 @@ inline double randomUniform() {
 	return distribution(generator);
 }
 
+inline int randInt(const int min, const int max) {
+	return min + rand() % (max - min + 1);
+}
+
 inline glm::vec3 SampleUniformHemisphere() {
 	float z = randomUniform();
 	float r = glm::sqrt(1 - z*z);
