@@ -7,6 +7,7 @@
 #include "spectrum.h"
 #include "light.h"
 #include "utils/math.h"
+#include "constant.h"
 
 class Material;
 
@@ -26,7 +27,7 @@ struct HitInfo {
 class Object
 {
 public:
-	virtual bool intersect(Ray& ray, HitInfo& rec) = 0;
+	virtual bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.01f, float tMax = MAX_FLOAT ) = 0;
 	std::shared_ptr<Material> material;
 	std::shared_ptr<AreaLight> light;
     AABB boundingBox;
@@ -36,7 +37,7 @@ class Sphere : public Object {
 public:
     Sphere(const glm::vec3& origin, const float radius);
 
-    bool intersect(Ray& ray, HitInfo& rec) override;
+    bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.01f, float tMax = MAX_FLOAT) override;
     
     float r;
     glm::vec3 origin;
@@ -64,11 +65,14 @@ public:
 		boundingBox = AABB(left->boundingBox, right->boundingBox);
 	}
 
-	bool intersect(Ray& ray, HitInfo& rec) { 
-		if (!boundingBox.intersect(ray, 0, 1000))
+	bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.01f, float tMax = MAX_FLOAT) {
+		if (!boundingBox.intersect(ray, tMin, tMax))
 			return false;
 			
-		return left->intersect(ray, rec) || right->intersect(ray, rec);
+		bool l = left->intersect(ray, rec, tMin, tMax);
+		bool r = right->intersect(ray, rec, tMin, l ? rec.t : tMax);
+
+		return l || r;
 	}
 
 private:
@@ -96,7 +100,7 @@ private:
 
 class Scene : public Object {
 public:
-	bool intersect(Ray& ray, HitInfo& rec);
+	bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.01f, float tMax = MAX_FLOAT);
 
 	void build();
 

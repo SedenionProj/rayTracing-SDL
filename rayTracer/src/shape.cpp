@@ -6,7 +6,7 @@ Sphere::Sphere(const glm::vec3& origin, const float radius)
 	boundingBox = AABB(origin - radius, origin + radius);
 }
 
-bool Sphere::intersect(Ray& ray, HitInfo& rec) {
+bool Sphere::intersect(Ray& ray, HitInfo& rec, float tMin, float tMax) {
 	glm::vec3 oc = ray.origin - origin;
 	float a = glm::dot(ray.direction, ray.direction);
 	float half_b = glm::dot(oc, ray.direction);
@@ -18,9 +18,9 @@ bool Sphere::intersect(Ray& ray, HitInfo& rec) {
 	float sqrtd = sqrt(discriminant);
 
 	float root = (-half_b - sqrtd) / a;
-	if (root < 0.01 || MAX_FLOAT < root) {
+	if (root < tMin || tMax < root) {
 		root = (-half_b + sqrtd) / a;
-		if (root < 0.01 || MAX_FLOAT < root) {
+		if (root < tMin || tMax < root) {
 			return false;
 		}
 	}
@@ -36,8 +36,8 @@ bool Sphere::intersect(Ray& ray, HitInfo& rec) {
 	return true;
 }
 
-bool Scene::intersect(Ray& ray, HitInfo& rec) {
-	return bvh->intersect(ray, rec);
+bool Scene::intersect(Ray& ray, HitInfo& rec, float tMin, float tMax) {
+	return bvh->intersect(ray, rec, tMin, tMax);
 }
 
 void Scene::build() {

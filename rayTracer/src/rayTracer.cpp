@@ -46,6 +46,7 @@ void Application::start() {
 
 	SDL_Event e;
 	while (isRunning) {
+		isMoving = false;
 		while (SDL_PollEvent(&e) != 0) {
 			event(e);
 		}
@@ -68,6 +69,7 @@ void Application::event(SDL_Event& event) {
 		isRunning = false;
 	}
 	if (event.type == SDL_KEYDOWN) {
+		isMoving = true;
 		switch (event.key.keysym.sym) {
 		case SDLK_z:
 			camera.position -= glm::vec3(0,0,0.1);
@@ -88,33 +90,39 @@ void Application::event(SDL_Event& event) {
 			camera.position -= glm::vec3(0, -0.1, 0);
 			break;
 		}
-		isMoving = true;
-	} else {
-		isMoving = false;
+		
 	}
 }
 
 void Application::initScene() {
 	camera.vfov = 90;
 	
-	std::shared_ptr<Sphere> s = std::make_shared<Sphere>(glm::vec3(0.2, 0, 0), 0.5f);
-	SampledSpectrum* spec = new SampledSpectrum(glm::vec3(1, 0, 0));
-	s->material = std::make_shared<Diffuse>(*spec);
-	//s->light = std::make_shared<AreaLight>(3000, 10.f);
+	//{
+	//	std::shared_ptr<Sphere> s = std::make_shared<Sphere>(glm::vec3(0.2, 0, 0), 0.5f);
+	//	SampledSpectrum* spec = new SampledSpectrum(glm::vec3(1, 0, 0));
+	//	s->material = std::make_shared<Diffuse>(*spec);
+	//	//s->light = std::make_shared<AreaLight>(3000, 10.f);
+	//	scene.objects.push_back(s);
+	//}
+	//
+	//
+	//std::shared_ptr<Sphere> s2 = std::make_shared<Sphere>(glm::vec3(-1, 0, 0), 0.5);
+	//SampledSpectrum* spec1 = new SampledSpectrum(glm::vec3(0, 1, 0));
+	//s2->material = std::make_shared<Diffuse>(*spec1);
+	//
+	//std::shared_ptr<Sphere> s3 = std::make_shared<Sphere>(glm::vec3(0, 20.5, 0), 20);
+	//SampledSpectrum* spec2 = new SampledSpectrum(glm::vec3(0.9));;
+	//s3->material = std::make_shared<Diffuse>(*spec2);
+
+	for (int i = 0; i < 1000; i++) {
+		std::shared_ptr<Sphere> s4 = std::make_shared<Sphere>(glm::vec3(randomUniform()-0.5f, randomUniform() - 0.5f, randomUniform() - 0.5f)*10.f,0.1f);
+		SampledSpectrum* spec2 = new SampledSpectrum(glm::vec3(1,0,0));;
+		s4->material = std::make_shared<Diffuse>(*spec2);
+
+		scene.objects.push_back(s4);
+	}
 	
-	std::shared_ptr<Sphere> s2 = std::make_shared<Sphere>(glm::vec3(-1, 0, 0), 0.5);
-	SampledSpectrum* spec1 = new SampledSpectrum(glm::vec3(0, 1, 0));
-	s2->material = std::make_shared<Diffuse>(*spec1);
-	
-	std::shared_ptr<Sphere> s3 = std::make_shared<Sphere>(glm::vec3(0, 20.5, 0), 20);
-	SampledSpectrum* spec2 = new SampledSpectrum(glm::vec3(0.9));;
-	s3->material = std::make_shared<Diffuse>(*spec2);
-	
-	scene.objects.push_back(s);
-	scene.objects.push_back(s2);
-	scene.objects.push_back(s3);
-	
-	scene.sky = new Sky(5000, 5.f);
+	scene.sky = new Sky(5000, 3.f);
 	
 	scene.build();
 }
@@ -129,17 +137,17 @@ void Application::loop(float dt) {
 		for (int y = 0; y < height; y++) {
 
 			Uint32* pixel = (Uint32*)((Uint8*)gSurface->pixels + y * gSurface->pitch + x * sizeof(Uint32));
-
 			Ray ray = camera.getRay(glm::vec2(x, y));
+
 			if (isMoving) {
 				camera.film.setSample(glm::vec2(x, y), renderPixel(ray, scene));
 				frame = 1;
 			} else {
 				camera.film.addSample(glm::vec2(x, y), renderPixel(ray, scene));
 			}
+
 			glm::vec3 rgb_color = xyz_to_rgb * (camera.film.getSample(glm::vec2(x, y)) / (float)frame);
 			rgb_color = glm::pow(rgb_color, glm::vec3(1.0 / 2.2));
-
 			*pixel = SDL_MapRGB(gSurface->format,
 				glm::clamp(rgb_color.x, 0.f, 1.f) * 255.f,
 				glm::clamp(rgb_color.y, 0.f, 1.f) * 255.f,
