@@ -27,6 +27,8 @@ private:
 	unsigned int height;
 	unsigned int frame = 0;
 
+	std::vector<float> verticalIT, horizontalIT;
+
 	Camera camera;
 	Scene scene;
 
