@@ -12,7 +12,7 @@ inline glm::vec3 orientNormal(glm::vec3& normal, glm::vec3& direction) {
 
 class AABB {
 public:
-	AABB(){}
+	AABB() : bMin{}, bMax{} {}
 
 	AABB(const AABB& a, const AABB& b)
 		: bMin(glm::vec3(std::min(a.bMin.x, b.bMin.x), std::min(a.bMin.y, b.bMin.y), std::min(a.bMin.z, b.bMin.z))),

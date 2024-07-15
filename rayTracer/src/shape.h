@@ -7,7 +7,7 @@
 #include "spectrum.h"
 #include "light.h"
 #include "utils/math.h"
-#include "constant.h"
+#include "utils/constant.h"
 
 class Material;
 
@@ -17,7 +17,7 @@ struct HitInfo {
 	glm::vec3 normal;
 	std::shared_ptr<Material> material;
     std::shared_ptr<AreaLight> light;
-    float Le(float lambda) {
+	float Le(float lambda) const {
         if (!light)
             return 0;
         return light->Le(lambda);
@@ -30,7 +30,7 @@ public:
 	virtual bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.01f, float tMax = MAX_FLOAT ) = 0;
 	std::shared_ptr<Material> material;
 	std::shared_ptr<AreaLight> light;
-    AABB boundingBox;
+	AABB boundingBox;
 };
 
 class Sphere : public Object {

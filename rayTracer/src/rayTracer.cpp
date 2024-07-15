@@ -167,7 +167,6 @@ void Application::loop(float dt) {
 				glm::clamp(rgb_color.x, 0.f, 1.f) * 255.f,
 				glm::clamp(rgb_color.y, 0.f, 1.f) * 255.f,
 				glm::clamp(rgb_color.z, 0.f, 1.f) * 255.f);
-
 		});
 	});
 }

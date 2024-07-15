@@ -1,5 +1,5 @@
 #pragma once
-#include "constant.h"
+#include "utils/constant.h"
 #include "shape.h"
 #include "spectrum.h"
 
