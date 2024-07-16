@@ -10,6 +10,11 @@ inline glm::vec3 orientNormal(glm::vec3& normal, glm::vec3& direction) {
 	return  glm::dot(normal, direction) < 0.f ? normal: -normal;
 }
 
+inline glm::mat3 xyz_to_rgb = glm::mat3(
+	glm::vec3(3.2406, -0.9689, 0.0557),
+	glm::vec3(-1.5372, 1.8758, -0.2040),
+	glm::vec3(-0.4986, 0.0415, 1.0570));
+
 class AABB {
 public:
 	AABB() : bMin{}, bMax{} {}

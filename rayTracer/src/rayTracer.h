@@ -1,9 +1,17 @@
 #pragma once
 #include <memory>
+#include <memory.h>
+#include <algorithm>
+#include <execution>
+#include <stdio.h>
 
 #include "SDL.h" 
+#include "rayTracer.h"
+#include "renderer.h"
+#include "spectrum.h"
 #include "camera.h"
 #include "shape.h"
+#include "renderer.h"
 
 class Application {
 public:
@@ -25,12 +33,11 @@ private:
 	bool isMoving;
 	unsigned int width;
 	unsigned int height;
-	unsigned int frame = 0;
 
-	std::vector<float> verticalIT, horizontalIT;
 
-	Camera camera;
 	Scene scene;
+	Camera camera;
+	Renderer renderer;
 
 	SDL_Window*   gWindow   = nullptr;
 	SDL_Renderer* gRenderer = nullptr;

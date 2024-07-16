@@ -187,9 +187,8 @@ private:
 
 class WaveLength {
 public:
-	WaveLength() {
-		float rdm = randomUniform();
-		lambda = lerp(rdm, Lambda_min, Lambda_max);
+	WaveLength(Sampler& sampler) {
+		lambda = lerp(sampler.get1D(), Lambda_min, Lambda_max);
 	}
 public:
 	float lambda;

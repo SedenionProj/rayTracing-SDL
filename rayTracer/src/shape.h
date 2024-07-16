@@ -106,6 +106,7 @@ public:
 
 	Sky* sky;
 	std::vector<std::shared_ptr<Object>> objects;
-
 	std::unique_ptr<BVHNode> bvh;
+
+	
 };

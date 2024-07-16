@@ -1,21 +1,12 @@
-#include <stdio.h>
 #include "rayTracer.h"
-#include "renderer.h"
-#include <memory.h>
-#include <algorithm>
-#include <execution>
-#include "spectrum.h"
 
 Application::Application(unsigned int width, unsigned height)
 	:width(width), height(height), isRunning(true),
-	camera(glm::vec3(0, 0, 1), glm::vec3(0, 0, -1), glm::vec2(width, height)){
+	camera(glm::vec3(0, 0, 1), glm::vec3(0, 0, -1), glm::vec2(width, height)),
+	renderer(scene, camera)
+{
 
-	verticalIT.resize(width);
-	horizontalIT.resize(height);
-	for (int i = 0; i < width; i++)
-		verticalIT[i] = i;
-	for (int i = 0; i < height; i++)
-		horizontalIT[i] = i;
+	
 
 	initScene();
 
@@ -64,7 +55,7 @@ void Application::start() {
 		deltaTime = (currentTime - prevTime);
 		prevTime = currentTime;
 
-		frame++;
+		
 
 		loop(deltaTime);
 		
@@ -122,14 +113,6 @@ void Application::initScene() {
 	std::shared_ptr<Sphere> s3 = std::make_shared<Sphere>(glm::vec3(0, 20.5, 0), 20);
 	SampledSpectrum* spec2 = new SampledSpectrum(glm::vec3(0.9));;
 	s3->material = std::make_shared<Diffuse>(*spec2);
-
-	for (int i = 0; i < 1000; i++) {
-		std::shared_ptr<Sphere> s4 = std::make_shared<Sphere>(glm::vec3(randomUniform()-0.5f, randomUniform() - 0.5f, randomUniform() - 0.5f)*10.f,0.1f);
-		SampledSpectrum* spec2 = new SampledSpectrum(glm::vec3(1,0,0));;
-		s4->material = std::make_shared<Diffuse>(*spec2);
-	
-		scene.objects.push_back(s4);
-	}
 	
 	scene.objects.push_back(s);
 	scene.objects.push_back(s2);
@@ -140,33 +123,7 @@ void Application::initScene() {
 	scene.build();
 }
 
-glm::mat3 xyz_to_rgb = glm::mat3(
-	glm::vec3(3.2406, -0.9689, 0.0557),
-	glm::vec3(-1.5372, 1.8758, -0.2040),
-	glm::vec3(-0.4986, 0.0415, 1.0570));
-
 void Application::loop(float dt) {
 	//std::cout << dt << "\n";
-
-	std::for_each(std::execution::par,verticalIT.begin(), verticalIT.end(), [this](int y) {
-		std::for_each(std::execution::par,horizontalIT.begin(), horizontalIT.end(), [this, y](int x) {
-			Ray ray = camera.getRay(glm::vec2(x, y));
-
-			if (isMoving) {
-				camera.film.setSample(glm::vec2(x, y), renderPixel(ray, scene));
-				frame = 1;
-			}
-			else {
-				camera.film.addSample(glm::vec2(x, y), renderPixel(ray, scene));
-			}
-
-			glm::vec3 rgb_color = xyz_to_rgb * (camera.film.getSample(glm::vec2(x, y)) / (float)frame);
-			rgb_color = glm::pow(rgb_color, glm::vec3(1.0 / 2.2));
-			Uint32* pixel = (Uint32*)((Uint8*)gSurface->pixels + y * gSurface->pitch + x * sizeof(Uint32));
-			*pixel = SDL_MapRGB(gSurface->format,
-				glm::clamp(rgb_color.x, 0.f, 1.f) * 255.f,
-				glm::clamp(rgb_color.y, 0.f, 1.f) * 255.f,
-				glm::clamp(rgb_color.z, 0.f, 1.f) * 255.f);
-		});
-	});
+	renderer.render(isMoving, gSurface);
 }
