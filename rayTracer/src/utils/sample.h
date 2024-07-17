@@ -1,10 +1,10 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "constant.h"
-
+#include <iostream>
 #include <random>
 
-#define DEFAULT_SEED 0x7fb5d329728ea185
+#define DEFAULT_SEED 0x7fb5d329728ea185u
 
 inline uint32_t MurmurHash3(const void* key, int len, uint32_t seed) {
 	const uint32_t c1 = 0xcc9e2d51;
@@ -105,19 +105,25 @@ inline glm::vec3 SampleUniformSphere(glm::vec2 seed) {
 	return { r * std::cos(phi), r * std::sin(phi), z };
 }
 
+#include <mutex>
+static std::mutex cout_mutex;
+
+
 class RNG {
 public:
+	
 	RNG(const uint64_t seed = DEFAULT_SEED) {
 		mcg_state = 2 * seed + 1;
 	}
 
 	[[nodiscard]] float uniform() {
 		// return range [0,1)
-		return std::min(ONE_MINUS_EPSILON, (float)pcg32_fast() / MAX_UINT32);
+		return std::min(ONE_MINUS_EPSILON, pcg32_fast() * 0x1p-32f);
 	}
 
 	void setSeed(const uint64_t seed) {
-		mcg_state = 2 * seed + 1;
+		mcg_state += 2 * seed + 1;
+		(void)pcg32_fast();
 	}
 
 private:
@@ -125,14 +131,15 @@ private:
 	uint32_t pcg32_fast(void)
 	{
 		uint64_t x = mcg_state;
-		unsigned count = (unsigned)(x >> 61);	// 61 = 64 - 3
+		unsigned count = (unsigned)(x >> 61);
 
 		mcg_state = x * multiplier;
 		x ^= x >> 22;
-		return (uint32_t)(x >> (22 + count));	// 22 = 32 - 3 - 7
+
+		return (uint32_t)(x >> (22 + count));
 	}
 
-	uint64_t mcg_state = 0xcafef00dd15ea5e5u;	// Must be odd
+	uint64_t mcg_state = 0xcafef00dd15ea5e5u;
 	uint64_t const multiplier = 6364136223846793005u;
 };
 
@@ -143,11 +150,12 @@ public:
 	[[nodiscard]] virtual float get1D() = 0;
 	[[nodiscard]] virtual glm::vec2 get2D() = 0;
 
-	virtual void startSample(glm::uvec2 pixelPos, int sampleIndex) = 0;
+	virtual void startSample(glm::uvec2 pixelPos, int sampleIndex, int seed = 0) = 0;
 	virtual int samplesPerPixel() = 0;
 protected:
 	RNG rng;
 	glm::uvec2 m_pixelPos;
+	int m_seed;
 };
 
 class IndependantSampler : public Sampler {
@@ -155,19 +163,19 @@ public:
 	IndependantSampler(int samplesPerPixel) 
 		: m_samplesNB(samplesPerPixel){}
 
-	float get1D() override {
-		return rng.uniform();
+	float get1D() override {	
+		return  rng.uniform();
 	}
 
 	glm::vec2 get2D() override {
 		return glm::vec2(get1D(), get1D());
 	}
 
-	void startSample(glm::uvec2 pixelPos, int sampleIndex) override {
+	void startSample(glm::uvec2 pixelPos, int sampleIndex, int seed) override {
 		rng.setSeed(rand());
 	}
 
-	int samplesPerPixel() { return m_samplesNB; }
+	int samplesPerPixel() override { return m_samplesNB; }
 
 private:
 	int m_samplesNB;
@@ -175,11 +183,11 @@ private:
 
 class StratifiedSampler : public Sampler {
 public:
-	StratifiedSampler(const int xSamplesNB = 3, const int ySamplesNB = 3)
+	StratifiedSampler(const int xSamplesNB, const int ySamplesNB)
 		: m_xSamplesNB(xSamplesNB), m_ySamplesNB(ySamplesNB) {}
 
 	float get1D() override {
-		uint32_t hash_ = hash(m_pixelPos.x, m_pixelPos.y, m_dimension);
+		uint32_t hash_ = hash(m_pixelPos.x, m_pixelPos.y, m_dimension, m_seed);
 		int stratum = permutationElement(m_sampleIndex, samplesPerPixel(), hash_);
 
 		m_dimension++;
@@ -188,20 +196,22 @@ public:
 
 	
 	glm::vec2 get2D() override {
-		uint32_t hash_ = hash(m_pixelPos.x, m_pixelPos.y, m_dimension);
+		uint32_t hash_ = hash(m_pixelPos.x, m_pixelPos.y, m_dimension, m_seed);
 		int stratum = permutationElement(m_sampleIndex, samplesPerPixel(), hash_);
 
 		m_dimension += 2;
 		int x = stratum % m_xSamplesNB, y = stratum / m_xSamplesNB;
 		float dx = rng.uniform();
 		float dy = rng.uniform();
+		//printf("%f\n", dx);
 		return glm::vec2( (x + dx) / m_xSamplesNB, (y + dy) / m_ySamplesNB);
 	}
 
-	void startSample(glm::uvec2 pixelPos, int sampleIndex) override {
+	void startSample(glm::uvec2 pixelPos, int sampleIndex, int seed) override {
 		m_pixelPos = pixelPos;
 		m_sampleIndex = sampleIndex;
 		m_dimension = 0;
+		m_seed = seed;
 		rng.setSeed(rand());
 	}
 

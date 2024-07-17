@@ -22,21 +22,26 @@ public:
 	}
 
 	void render(bool isMoving, SDL_Surface* gSurface) {
-		camera.film.totalSamplesNB+=25;
+
+		camera.film.totalSamplesNB += 4;
 
 		std::for_each(std::execution::par, verticalIT.begin(), verticalIT.end(), [&](int y) {
 			std::for_each(std::execution::par, horizontalIT.begin(), horizontalIT.end(), [&, y](int x) {
-				StratifiedSampler sampler(5, 5);
+
+				glm::uvec2 pixelPos = glm::uvec2(x, y);
+
+				//IndependantSampler sampler(4);
+				StratifiedSampler sampler(2,2);
 
 				for (int i = 0; i < sampler.samplesPerPixel(); i++) {
-					sampler.startSample(glm::vec2(x, y), i);
+					sampler.startSample(pixelPos, i, camera.film.totalSamplesNB);
 					if (isMoving)
-						camera.film.setSample(glm::vec2(x, y), renderPixel(sampler, glm::vec2(x, y)));
+						camera.film.setSample(pixelPos, renderPixel(sampler, pixelPos));
 					else
-						camera.film.addSample(glm::vec2(x, y), renderPixel(sampler, glm::vec2(x, y)));
+						camera.film.addSample(pixelPos, renderPixel(sampler, pixelPos));
 				}
 
-				glm::vec3 rgb_color = xyz_to_rgb * (camera.film.getSample(glm::vec2(x, y)) / (float)camera.film.totalSamplesNB);
+				glm::vec3 rgb_color = xyz_to_rgb * (camera.film.getSample(pixelPos) / (float)camera.film.totalSamplesNB);
 				rgb_color = glm::pow(rgb_color, glm::vec3(1.0 / 2.2));
 				Uint32* pixel = (Uint32*)((Uint8*)gSurface->pixels + y * gSurface->pitch + x * sizeof(Uint32));
 				*pixel = SDL_MapRGB(gSurface->format,
