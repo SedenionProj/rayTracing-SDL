@@ -13,9 +13,10 @@ public:
 
 class Diffuse : public Material {
 public:
-	Diffuse(const Spectrum& spectrum): m_spectrum(spectrum) {}
+	Diffuse(const glm::vec3& color)
+		: m_spectrum(std::make_unique<SampledSpectrum>(color)) {}
 	
 	float getBSDF(glm::vec3 wo, glm::vec3 wi, HitInfo& rec, WaveLength lambda) override;
 
-	const Spectrum& m_spectrum;
+	std::unique_ptr<Spectrum> m_spectrum;
 };

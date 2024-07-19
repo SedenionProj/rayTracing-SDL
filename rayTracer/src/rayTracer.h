@@ -15,7 +15,7 @@
 
 class Application {
 public:
-	Application(unsigned int width, unsigned height);
+	Application(unsigned int width, unsigned int height);
 	~Application();
 
 	void start();
@@ -33,7 +33,6 @@ private:
 	bool isMoving;
 	unsigned int width;
 	unsigned int height;
-
 
 	Scene scene;
 	Camera camera;

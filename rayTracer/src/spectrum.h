@@ -51,14 +51,14 @@ private:
 class SampledSpectrum : public Spectrum {
 public:
 	SampledSpectrum(int n)
-		: m_lambda(n, 0), m_values(n, 1) {}
+		: m_lambdas(n, 0), m_values(n, 1) {}
 
 	SampledSpectrum(const float* lambda, const float* value, int n)
-		: m_lambda(lambda, lambda + n), m_values(value, value + n) {}
+		: m_lambdas(lambda, lambda + n), m_values(value, value + n) {}
 
 	SampledSpectrum(const glm::vec3& rgb)
-		: m_lambda(RGBRefl2SpectWhite.m_lambda),
-		m_values(RGBRefl2SpectWhite.m_lambda.size(), 0){
+		: m_lambdas(RGBRefl2SpectWhite.m_lambdas),
+		m_values(RGBRefl2SpectWhite.m_lambdas.size(), 0){
 		if (rgb[0] <= rgb[1] && rgb[0] <= rgb[2]) {
 			*this += rgb[0] * RGBRefl2SpectWhite;
 			if (rgb[1] <= rgb[2]) {
@@ -98,11 +98,14 @@ public:
 	}
 
 	float operator()(float lambda) const override {
-		auto val = std::upper_bound(m_lambda.begin(), m_lambda.end(), lambda);
-		size_t index = val - m_lambda.begin();
-		if (index < 0 || index>31)
+		if (lambda < m_lambdas.front() || lambda > m_lambdas.back())
 			return 0;
-		return m_values[index];
+
+		auto val = std::upper_bound(m_lambdas.begin(), m_lambdas.end(), lambda);
+		int index = val - m_lambdas.begin();
+
+		float t = (lambda - m_lambdas[index-1]) / (m_lambdas[index] - m_lambdas[index-1]);
+		return lerp(t, m_values[index - 1], m_values[index]);
 	}
 
 	float operator[](int i) const {
@@ -117,7 +120,7 @@ public:
 	}
 
 	SampledSpectrum& operator+=(const SampledSpectrum& spec) {
-		for (int i = 0; i < m_lambda.size(); i++) {
+		for (int i = 0; i < m_lambdas.size(); i++) {
 			m_values[i] += spec[i];
 		}
 		return *this;
@@ -139,22 +142,8 @@ public:
 	}
 
 public:
-	std::vector<float> m_lambda;
+	std::vector<float> m_lambdas;
 	std::vector<float> m_values;
-};
-
-class RGBSpectrum : public Spectrum {
-public:
-	RGBSpectrum(const glm::vec3& rgb) {
-
-	}
-
-	float operator()(float lambda) const override {
-		return 0;
-	}
-
-private:
-
 };
 
 class BlackBodySpectrum : public Spectrum {
@@ -188,10 +177,15 @@ private:
 class WaveLength {
 public:
 	WaveLength(Sampler& sampler) {
-		lambda = lerp(sampler.get1D(), Lambda_min, Lambda_max);
+		m_lambda = lerp(sampler.get1D(), Lambda_min, Lambda_max);
 	}
+
+	operator float() const {
+		return m_lambda;
+	}
+
 public:
-	float lambda;
+	float m_lambda;
 };
 
 

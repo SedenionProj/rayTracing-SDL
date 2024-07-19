@@ -61,9 +61,9 @@ private:
 
 		float col = naivePathTracerRecursive(rec, lambda, ray, sampler, 5);
 
-		float x = X(lambda.lambda);
-		float y = Y(lambda.lambda);
-		float z = Z(lambda.lambda);
+		float x = X(lambda);
+		float y = Y(lambda);
+		float z = Z(lambda);
 
 		return glm::vec3(x, y, z) * col;
 	}
@@ -71,10 +71,10 @@ private:
 	float naivePathTracerRecursive(HitInfo& rec, const WaveLength& lambda, Ray& ray, Sampler& sampler, int depth) {
 
 		if (!scene.intersect(ray, rec)) {
-			return scene.sky->Le(lambda.lambda);
+			return scene.sky->Le(lambda);
 		}
 
-		float Le = rec.Le(lambda.lambda);
+		float Le = rec.Le(lambda);
 
 		if (depth == 0) {
 			return Le;

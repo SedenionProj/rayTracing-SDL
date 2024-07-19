@@ -24,16 +24,19 @@ struct HitInfo {
     }
 };
 
-class Object
-{
+class Object {
 public:
 	virtual bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.01f, float tMax = MAX_FLOAT ) = 0;
-	std::shared_ptr<Material> material;
-	std::shared_ptr<AreaLight> light;
 	AABB boundingBox;
 };
 
-class Sphere : public Object {
+class Shape : public Object {
+public:
+	std::shared_ptr<Material> material;
+	std::shared_ptr<AreaLight> light;
+};
+
+class Sphere : public Shape {
 public:
     Sphere(const glm::vec3& origin, const float radius);
 
@@ -104,7 +107,7 @@ public:
 
 	void build();
 
-	Sky* sky;
+	std::unique_ptr<Sky> sky;
 	std::vector<std::shared_ptr<Object>> objects;
 	std::unique_ptr<BVHNode> bvh;
 
