@@ -27,11 +27,20 @@ bool Sphere::intersect(Ray& ray, HitInfo& rec, float tMin, float tMax) {
 	glm::vec3 p = ray.at(root);
 	glm::vec3 normal = (p - origin) / r;
 
+	// uv
+	auto theta = std::acos(-normal.y);
+	auto phi = std::atan2(-normal.z, normal.x) + PI;
+
+	float u = phi / (2 * PI);
+	float v = theta / PI;
+
+	// rec
 	rec.normal = orientNormal(normal, ray.direction);
 	rec.t = root;
 	rec.pos = p;
 	rec.material = material;
 	rec.light = light;
+	rec.uv = glm::vec2(u, v);
 
 	return true;
 }

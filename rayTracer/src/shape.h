@@ -12,16 +12,19 @@
 class Material;
 
 struct HitInfo {
-	float t;
-	glm::vec3 pos;
-	glm::vec3 normal;
-	std::shared_ptr<Material> material;
-    std::shared_ptr<AreaLight> light;
 	float Le(float lambda) const {
         if (!light)
             return 0;
         return light->Le(lambda);
     }
+	
+	float t;
+	glm::vec3 pos;
+	glm::vec3 normal;
+	std::shared_ptr<Material> material;
+	std::shared_ptr<AreaLight> light;
+
+	glm::vec2 uv;
 };
 
 class Object {

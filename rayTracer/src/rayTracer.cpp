@@ -100,7 +100,8 @@ void Application::initScene() {
 	s->light = std::make_shared<AreaLight>(3000, 10.f);
 	
 	std::shared_ptr<Sphere> s2 = std::make_shared<Sphere>(glm::vec3(-1, 0, 0), 0.5);
-	s2->material = std::make_shared<Diffuse>(glm::vec3(0, 1, 0));
+	//s2->material = std::make_shared<Diffuse>(glm::vec3(0, 1, 0));
+	s2->material = std::make_shared<Diffuse>("tex.jpg");
 	
 	std::shared_ptr<Sphere> s3 = std::make_shared<Sphere>(glm::vec3(0, 20.5, 0), 20);
 	s3->material = std::make_shared<Diffuse>(glm::vec3(0.9));
