@@ -97,7 +97,7 @@ void Application::initScene() {
 	
 	std::shared_ptr<Sphere> s = std::make_shared<Sphere>(glm::vec3(0.2, 0, 0), 0.5f);
 	s->material = std::make_shared<Diffuse>(glm::vec3(1, 0, 0));
-	s->light = std::make_shared<AreaLight>(3000, 10.f);
+	s->light = std::make_shared<AreaLight>(3000, 10.f, s);
 	
 	std::shared_ptr<Sphere> s2 = std::make_shared<Sphere>(glm::vec3(-1, 0, 0), 0.5);
 	//s2->material = std::make_shared<Diffuse>(glm::vec3(0, 1, 0));
@@ -106,11 +106,11 @@ void Application::initScene() {
 	std::shared_ptr<Sphere> s3 = std::make_shared<Sphere>(glm::vec3(0, 20.5, 0), 20);
 	s3->material = std::make_shared<Diffuse>(glm::vec3(0.9));
 	
-	scene.objects.push_back(s);
-	scene.objects.push_back(s2);
-	scene.objects.push_back(s3);
+	scene.addShape(s);
+	scene.addShape(s2);
+	scene.addShape(s3);
 
-	scene.sky = std::make_unique<Sky>(2000, 1.f);
+	scene.addSky(std::make_shared<Sky>(2000, 1.f));
 	
 	scene.build();
 }

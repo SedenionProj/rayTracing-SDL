@@ -8,6 +8,7 @@ class Image {
 public:
 	Image(const char* path) {
 		data = stbi_load(path, &width, &height, &channels, 3);
+		if (!data) throw;
 	}
 
 	glm::vec3 pixelColor(glm::uvec2 pos) {

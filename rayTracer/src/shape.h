@@ -35,6 +35,8 @@ public:
 
 class Shape : public Object {
 public:
+	virtual std::tuple<glm::vec3, float> sample(glm::vec2 sample, glm::vec3 pos) = 0;
+public:
 	std::shared_ptr<Material> material;
 	std::shared_ptr<AreaLight> light;
 };
@@ -45,6 +47,28 @@ public:
 
     bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.01f, float tMax = MAX_FLOAT) override;
     
+	std::tuple<glm::vec3, float> sample(glm::vec2 sample, glm::vec3 pos) {
+		// sample a point outside the sphere
+		float sinThetaMax = r / glm::distance(pos, origin);
+		float sin2ThetaMax = sinThetaMax * sinThetaMax;
+		float cosThetaMax = glm::sqrt(1 - sin2ThetaMax);
+		float oneMinusCosThetaMax = 1 - cosThetaMax;
+
+		float cosTheta = (cosThetaMax - 1) * sample.x + 1;
+		float sin2Theta = 1 - cosTheta * cosTheta;
+
+		float cosAlpha = sin2Theta / sinThetaMax + 
+			cosTheta * glm::sqrt(1 - sin2Theta / (sinThetaMax * sinThetaMax) );
+		float sinAlpha = glm::sqrt(1 - cosAlpha* cosAlpha);
+
+		float phi = sample.y * 2 * PI;
+		glm::vec3 w = sphericalDirection(sinAlpha, cosAlpha, phi);
+		auto cs = CoordinateSystem(glm::normalize(origin-pos));
+		glm::vec3 n = cs.transform(-w);
+		glm::vec3 p = origin + r * n*1.01f;
+		return { p, 1.f / (2.f * PI * oneMinusCosThetaMax) };
+	}
+
     float r;
     glm::vec3 origin;
 };
@@ -107,12 +131,17 @@ private:
 class Scene : public Object {
 public:
 	bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.01f, float tMax = MAX_FLOAT);
-
 	void build();
+	void addShape(const std::shared_ptr<Shape> obj);
+	void addSky(const std::shared_ptr<Sky> skyLight);
+	std::shared_ptr<Light> sampleLight(float sample) {
+		return lights[glm::min(glm::floor(lights.size() * sample), lights.size()-1.f)];
+	}
 
-	std::unique_ptr<Sky> sky;
+	std::shared_ptr<Sky> sky;
 	std::vector<std::shared_ptr<Object>> objects;
 	std::unique_ptr<BVHNode> bvh;
 
-	
+private:
+	std::vector<std::shared_ptr<Light>> lights;
 };

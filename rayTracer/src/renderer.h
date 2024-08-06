@@ -8,7 +8,8 @@
 #include "utils/sample.h"
 #include "camera.h"
 
-// no dynamic dispatch as vtables can slow down the program
+
+
 class Renderer {
 public:
 	Renderer(Scene& scene, Camera& camera) :
@@ -30,8 +31,8 @@ public:
 
 				glm::uvec2 pixelPos = glm::uvec2(x, y);
 
-				//IndependantSampler sampler(4);
-				StratifiedSampler sampler(2,2);
+				IndependantSampler sampler(4);
+				//StratifiedSampler sampler(2,2);
 
 				for (int i = 0; i < sampler.samplesPerPixel(); i++) {
 					sampler.startSample(pixelPos, i, camera.film.totalSamplesNB);
@@ -59,7 +60,7 @@ private:
 		WaveLength lambda(sampler);
 		HitInfo rec{};
 
-		float col = naivePathTracerRecursive(rec, lambda, ray, sampler, 5);
+		float col = simplePathTracer(rec, lambda, ray, sampler, 5);
 
 		float x = X(lambda);
 		float y = Y(lambda);
@@ -92,6 +93,77 @@ private:
 		ray.origin = rec.pos;
 
 		return Le + fcos * naivePathTracerRecursive(rec, lambda, ray, sampler, depth - 1) * 4.f * PI;
+	}
+
+	float simplePathTracer(HitInfo& rec, const WaveLength& lambda, Ray& ray, Sampler& sampler, int depth) {
+		float L = 0;
+		float beta = 1;
+		bool test = true; // specular bounce
+
+		while (true) {
+			if (!scene.intersect(ray, rec)) {
+				if(test)
+					L+= beta * scene.sky->Le(lambda);
+				break;
+			}
+
+			if (test) {
+				L += beta * rec.Le(lambda);
+			}
+
+			if (depth-- == 0) {
+				break;
+			}
+
+			glm::vec3 wo = -ray.direction;
+			auto sampledLight = scene.sampleLight(sampler.get1D());
+			LightSample ls = sampledLight->sampleLi(sampler.get2D(), rec.pos, lambda);
+			if (ls.pdf > 0.f) {
+				float f = rec.material->getBSDF(wo, ls.wi, rec, lambda) * glm::abs(glm::dot(ls.wi, rec.normal));
+				if (f && unoccluded(rec.pos, ls.pos)) {
+					L += beta * f * ls.L / (ls.pdf);
+					//L = 500;
+					//break;
+				}
+			}
+
+			//L = 0;
+			//break;
+
+			glm::vec3 wi = SampleUniformSphere(sampler.get2D());
+			beta *= rec.material->getBSDF(wo, -wi, rec, lambda) * glm::abs(glm::dot(wi, rec.normal)) * 4.f * PI;
+			ray.direction = wi;
+			ray.origin = rec.pos;
+
+			test = false;
+		}
+
+		return L;
+	}
+
+	float tester(HitInfo& rec, const WaveLength& lambda, Ray& ray, Sampler& sampler, int depth) {
+		float L = 500;
+
+		if (!scene.intersect(ray, rec)) {
+			return 0;
+		}
+
+		if (!unoccluded(rec.pos, glm::vec3(-2,-2,-2)))
+			L = 0;
+
+
+		return L;
+	}
+
+private:
+	inline bool unoccluded(glm::vec3 p1, glm::vec3 p2) {
+		Ray ray(p1, glm::normalize(p2-p1));
+		HitInfo rec;
+		if(!scene.intersect(ray, rec))
+			return true;
+		if (glm::length(p1 - rec.pos) < (glm::length(p2 - p1)-0.01))
+			return false;
+		return true;
 	}
 
 private:

@@ -50,5 +50,20 @@ bool Scene::intersect(Ray& ray, HitInfo& rec, float tMin, float tMax) {
 }
 
 void Scene::build() {
+
+
 	bvh = std::make_unique<BVHNode>(objects, 0, objects.size());
+}
+
+void Scene::addShape(const std::shared_ptr<Shape> obj) {
+	if (obj->light) {
+		lights.push_back(obj->light);
+	}
+
+	objects.push_back(obj);
+}
+
+void Scene::addSky(std::shared_ptr<Sky> skyLight) {
+	//lights.push_back(skyLight);
+	sky = skyLight;
 }
