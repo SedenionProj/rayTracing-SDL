@@ -64,6 +64,6 @@ void Scene::addShape(const std::shared_ptr<Shape> obj) {
 }
 
 void Scene::addSky(std::shared_ptr<Sky> skyLight) {
-	//lights.push_back(skyLight);
+	lights.push_back(skyLight);
 	sky = skyLight;
 }

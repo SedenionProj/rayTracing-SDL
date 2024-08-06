@@ -1,6 +1,8 @@
 #pragma once
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
+#include <glm/gtx/norm.hpp>
 #include "camera.h"
 #include "shape.h"
 #include "utils/sample.h"
@@ -31,8 +33,8 @@ public:
 
 				glm::uvec2 pixelPos = glm::uvec2(x, y);
 
-				IndependantSampler sampler(4);
-				//StratifiedSampler sampler(2,2);
+				//IndependantSampler sampler(4);
+				StratifiedSampler sampler(2,2);
 
 				for (int i = 0; i < sampler.samplesPerPixel(); i++) {
 					sampler.startSample(pixelPos, i, camera.film.totalSamplesNB);
@@ -118,20 +120,17 @@ private:
 			glm::vec3 wo = -ray.direction;
 			auto sampledLight = scene.sampleLight(sampler.get1D());
 			LightSample ls = sampledLight->sampleLi(sampler.get2D(), rec.pos, lambda);
-			if (ls.pdf > 0.f) {
+			if (glm::length2(ls.pos-rec.pos) > 0.00001 && ls.L && ls.pdf > 0.f ) {
 				float f = rec.material->getBSDF(wo, ls.wi, rec, lambda) * glm::abs(glm::dot(ls.wi, rec.normal));
-				if (f && unoccluded(rec.pos, ls.pos)) {
-					L += beta * f * ls.L / (ls.pdf);
-					//L = 500;
-					//break;
+				if (f!=0 && unoccluded(rec.pos, ls.pos)) {
+					L += beta * f * ls.L / (ls.pdf * scene.pmf());
 				}
 			}
 
-			//L = 0;
-			//break;
-
 			glm::vec3 wi = SampleUniformSphere(sampler.get2D());
-			beta *= rec.material->getBSDF(wo, -wi, rec, lambda) * glm::abs(glm::dot(wi, rec.normal)) * 4.f * PI;
+			if (glm::dot(wo, rec.normal) * glm::dot(wi, rec.normal) >= 0)
+				wi = -wi;
+			beta *= rec.material->getBSDF(wo, wi, rec, lambda) * glm::abs(glm::dot(wi, rec.normal)) * 4.f * PI;
 			ray.direction = wi;
 			ray.origin = rec.pos;
 
@@ -161,7 +160,7 @@ private:
 		HitInfo rec;
 		if(!scene.intersect(ray, rec))
 			return true;
-		if (glm::length(p1 - rec.pos) < (glm::length(p2 - p1)-0.01))
+		if (glm::length2(p1 - rec.pos) < (glm::length2(p2 - p1)-0.01))
 			return false;
 		return true;
 	}

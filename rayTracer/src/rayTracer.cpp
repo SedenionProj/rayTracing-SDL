@@ -2,7 +2,7 @@
 
 Application::Application(unsigned int width, unsigned int height)
 	:width(width), height(height), isRunning(true),
-	camera(glm::vec3(0, 0, 1), glm::vec3(0, 0, -1), glm::vec2(width, height)),
+	camera(glm::vec3(-0.2, -0.2, 2), glm::vec3(0, 0, -1), glm::vec2(width, height)),
 	renderer(scene, camera)
 {
 	initScene();

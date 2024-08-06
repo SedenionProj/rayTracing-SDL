@@ -137,7 +137,9 @@ public:
 	std::shared_ptr<Light> sampleLight(float sample) {
 		return lights[glm::min(glm::floor(lights.size() * sample), lights.size()-1.f)];
 	}
-
+	float pmf() const {
+		return 1.f / lights.size();
+	}
 	std::shared_ptr<Sky> sky;
 	std::vector<std::shared_ptr<Object>> objects;
 	std::unique_ptr<BVHNode> bvh;
