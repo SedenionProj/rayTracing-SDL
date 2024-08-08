@@ -33,8 +33,8 @@ public:
 
 				glm::uvec2 pixelPos = glm::uvec2(x, y);
 
-				//IndependantSampler sampler(4);
-				StratifiedSampler sampler(2,2);
+				IndependantSampler sampler(4);
+				//StratifiedSampler sampler(2,2);
 
 				for (int i = 0; i < sampler.samplesPerPixel(); i++) {
 					sampler.startSample(pixelPos, i, camera.film.totalSamplesNB);
@@ -62,7 +62,7 @@ private:
 		WaveLength lambda(sampler);
 		HitInfo rec{};
 
-		float col = simplePathTracer(rec, lambda, ray, sampler, 5);
+		float col = tester(rec, lambda, ray, sampler, 5);
 
 		float x = X(lambda);
 		float y = Y(lambda);
@@ -85,7 +85,7 @@ private:
 
 		glm::vec3 wp = SampleUniformSphere(sampler.get2D());
 
-		float fcos = rec.material->getBSDF(-ray.direction, wp, rec, lambda) * glm::abs(glm::dot(wp, rec.normal));
+		float fcos = rec.material->BSDF_f(-ray.direction, wp, rec, lambda) * glm::abs(glm::dot(wp, rec.normal));
 
 		if (fcos == 0) {
 			return Le;
@@ -121,18 +121,26 @@ private:
 			auto sampledLight = scene.sampleLight(sampler.get1D());
 			LightSample ls = sampledLight->sampleLi(sampler.get2D(), rec.pos, lambda);
 			if (glm::length2(ls.pos-rec.pos) > 0.00001 && ls.L && ls.pdf > 0.f ) {
-				float f = rec.material->getBSDF(wo, ls.wi, rec, lambda) * glm::abs(glm::dot(ls.wi, rec.normal));
+				float f = rec.material->BSDF_f(wo, ls.wi, rec, lambda) * glm::abs(glm::dot(ls.wi, rec.normal));
 				if (f!=0 && unoccluded(rec.pos, ls.pos)) {
 					L += beta * f * ls.L / (ls.pdf * scene.pmf());
 				}
 			}
 
-			glm::vec3 wi = SampleUniformSphere(sampler.get2D());
-			if (glm::dot(wo, rec.normal) * glm::dot(wi, rec.normal) >= 0)
-				wi = -wi;
-			beta *= rec.material->getBSDF(wo, wi, rec, lambda) * glm::abs(glm::dot(wi, rec.normal)) * 4.f * PI;
-			ray.direction = wi;
+			//glm::vec3 wi = SampleUniformSphere(sampler.get2D());
+			//if (glm::dot(wo, rec.normal) * glm::dot(wi, rec.normal) >= 0)
+			//	wi = -wi;
+			//beta *= rec.material->BSDF_f(wo, wi, rec, lambda) * glm::abs(glm::dot(wi, rec.normal)) * 4.f * PI;
+			//ray.direction = wi;
+			//ray.origin = rec.pos;
+
+			BSDFSample bs = rec.material->SampleBSDF(wo, rec.normal, sampler, rec, lambda);
+			if (!bs.f || bs.pdf == 0 || bs.wi.z == 0) {
+				break;
+			}
+			beta *= bs.f * glm::abs(glm::dot(bs.wi, rec.normal)) / bs.pdf;
 			ray.origin = rec.pos;
+			ray.direction = bs.wi;
 
 			test = false;
 		}
@@ -141,17 +149,34 @@ private:
 	}
 
 	float tester(HitInfo& rec, const WaveLength& lambda, Ray& ray, Sampler& sampler, int depth) {
-		float L = 500;
-
 		if (!scene.intersect(ray, rec)) {
-			return 0;
+			return scene.sky->Le(lambda);
 		}
 
-		if (!unoccluded(rec.pos, glm::vec3(-2,-2,-2)))
-			L = 0;
+		float Le = rec.Le(lambda);
+
+		if (depth == 0) {
+			return Le;
+		}
+
+		BSDFSample bs = rec.material->SampleBSDF(-ray.direction, rec.normal, sampler, rec, lambda);
+
+		if (!bs.f || bs.pdf == 0 || bs.wi.z == 0) {
+			return Le;
+		}
+
+		ray.origin = rec.pos;
+		ray.direction = bs.wi;
 
 
-		return L;
+		float fcos = bs.f * glm::abs(glm::dot(bs.wi, rec.normal));
+
+		if (fcos == 0) {
+			return Le;
+		}
+
+
+		return Le + fcos * tester(rec, lambda, ray, sampler, depth - 1) / bs.pdf;
 	}
 
 private:

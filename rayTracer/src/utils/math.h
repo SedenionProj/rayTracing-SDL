@@ -58,9 +58,6 @@ public:
 
 class CoordinateSystem {
 public:
-	CoordinateSystem(const glm::vec3& u, const glm::vec3& v, const glm::vec3& w)
-		: u(u), v(v), w(w) {}
-
 	CoordinateSystem(const glm::vec3& n) {
 		w = glm::normalize(n);
 		glm::vec3 a = (glm::abs(w.x) > 0.9) ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
@@ -71,6 +68,11 @@ public:
 	glm::vec3 transform(const glm::vec3& vec) {
 		return vec.x * u + vec.y * v + vec.z * w;
 	}
+
+	glm::vec3 invTransform(const glm::vec3& vec) {
+		return glm::vec3(glm::dot(vec, u), glm::dot(vec, v), glm::dot(vec, w));
+	}
 private:
 	glm::vec3 u,v, w;
 };
+

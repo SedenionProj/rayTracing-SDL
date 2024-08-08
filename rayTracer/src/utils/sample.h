@@ -105,8 +105,6 @@ inline glm::vec3 SampleUniformSphere(glm::vec2 seed) {
 	return { r * std::cos(phi), r * std::sin(phi), z };
 }
 
-#include <mutex>
-static std::mutex cout_mutex;
 
 
 class RNG {
@@ -226,3 +224,14 @@ private:
 	int m_xSamplesNB;
 	int m_ySamplesNB;
 };
+
+inline glm::vec3 sampleRandomCosineDirection(Sampler& sampler) {
+	glm::vec2 r = sampler.get2D();
+
+	float phi = 2. * PI * r.x;
+	float x = cos(phi) * sqrt(r.y);
+	float y = sin(phi) * sqrt(r.y);
+	float z = sqrt(1. - r.y);
+
+	return glm::vec3(x, y, z);
+}
