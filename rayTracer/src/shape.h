@@ -65,7 +65,7 @@ public:
 		glm::vec3 w = sphericalDirection(sinAlpha, cosAlpha, phi);
 		auto cs = CoordinateSystem(glm::normalize(origin-pos));
 		glm::vec3 n = cs.transform(-w);
-		glm::vec3 p = origin + r * n*1.01f;
+		glm::vec3 p = origin + r * n*1.00001f;
 		return { p, 1.f / (2.f * PI * oneMinusCosThetaMax) };
 	}
 

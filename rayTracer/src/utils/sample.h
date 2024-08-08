@@ -89,7 +89,7 @@ inline int randInt(const int min, const int max) {
 	return min + rand() % (max - min + 1);
 }
 
-inline glm::vec3 SampleUniformHemisphere(glm::vec2 seed) {
+inline glm::vec3 sampleUniformHemisphere(glm::vec2 seed) {
 	float z = seed.x;
 	float r = glm::sqrt(1 - z*z);
 	float phi = 2.f * PI * seed.y;

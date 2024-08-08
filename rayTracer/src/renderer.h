@@ -62,7 +62,7 @@ private:
 		WaveLength lambda(sampler);
 		HitInfo rec{};
 
-		float col = tester(rec, lambda, ray, sampler, 5);
+		float col = naivePathTracerRecursive(rec, lambda, ray, sampler, 1);
 
 		float x = X(lambda);
 		float y = Y(lambda);
@@ -104,8 +104,8 @@ private:
 
 		while (true) {
 			if (!scene.intersect(ray, rec)) {
-				if(test)
-					L+= beta * scene.sky->Le(lambda);
+				if (test)
+					L += beta * scene.sky->Le(lambda);
 				break;
 			}
 
@@ -120,19 +120,12 @@ private:
 			glm::vec3 wo = -ray.direction;
 			auto sampledLight = scene.sampleLight(sampler.get1D());
 			LightSample ls = sampledLight->sampleLi(sampler.get2D(), rec.pos, lambda);
-			if (glm::length2(ls.pos-rec.pos) > 0.00001 && ls.L && ls.pdf > 0.f ) {
+			if (glm::length2(ls.pos - rec.pos) > 0.00001 && ls.L && ls.pdf > 0.f) {
 				float f = rec.material->BSDF_f(wo, ls.wi, rec, lambda) * glm::abs(glm::dot(ls.wi, rec.normal));
-				if (f!=0 && unoccluded(rec.pos, ls.pos)) {
+				if (f != 0 && unoccluded(rec.pos, ls.pos)) {
 					L += beta * f * ls.L / (ls.pdf * scene.pmf());
 				}
 			}
-
-			//glm::vec3 wi = SampleUniformSphere(sampler.get2D());
-			//if (glm::dot(wo, rec.normal) * glm::dot(wi, rec.normal) >= 0)
-			//	wi = -wi;
-			//beta *= rec.material->BSDF_f(wo, wi, rec, lambda) * glm::abs(glm::dot(wi, rec.normal)) * 4.f * PI;
-			//ray.direction = wi;
-			//ray.origin = rec.pos;
 
 			BSDFSample bs = rec.material->SampleBSDF(wo, rec.normal, sampler, rec, lambda);
 			if (!bs.f || bs.pdf == 0 || bs.wi.z == 0) {
