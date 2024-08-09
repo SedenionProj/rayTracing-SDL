@@ -62,7 +62,7 @@ private:
 		WaveLength lambda(sampler);
 		HitInfo rec{};
 
-		float col = naivePathTracerRecursive(rec, lambda, ray, sampler, 1);
+		float col = naivePathTracer(rec, lambda, ray, sampler, 5);
 
 		float x = X(lambda);
 		float y = Y(lambda);
@@ -95,6 +95,33 @@ private:
 		ray.origin = rec.pos;
 
 		return Le + fcos * naivePathTracerRecursive(rec, lambda, ray, sampler, depth - 1) * 4.f * PI;
+	}
+
+	float naivePathTracer(HitInfo& rec, const WaveLength& lambda, Ray& ray, Sampler& sampler, int depth) {
+		float L = 0;
+		float beta = 1;
+
+		while (true) {
+			if (!scene.intersect(ray, rec)) {
+				L += beta * scene.sky->Le(lambda);
+				break;
+			}
+
+			L += beta * rec.Le(lambda);
+
+			if (depth-- == 0) {
+				break;
+			}
+
+			glm::vec3 wo = -ray.direction;
+			glm::vec3 wp = SampleUniformSphere(sampler.get2D());
+
+			beta *= rec.material->BSDF_f(-ray.direction, wp, rec, lambda) * glm::abs(glm::dot(wp, rec.normal)) * 4.f * PI;
+			ray.origin = rec.pos;
+			ray.direction = wp;
+		}
+
+		return L;
 	}
 
 	float simplePathTracer(HitInfo& rec, const WaveLength& lambda, Ray& ray, Sampler& sampler, int depth) {
