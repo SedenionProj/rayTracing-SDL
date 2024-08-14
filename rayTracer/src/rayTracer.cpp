@@ -95,22 +95,27 @@ void Application::event(SDL_Event& event) {
 void Application::initScene() {
 	camera.vfov = 90;
 	
-	std::shared_ptr<Sphere> s = std::make_shared<Sphere>(glm::vec3(0.2, 0, 0), 0.5f);
+	std::shared_ptr<Sphere> s = std::make_shared<Sphere>(glm::vec3(0, -2, 0), 0.5f);
 	s->material = std::make_shared<Diffuse>(glm::vec3(1, 0, 0));
 	s->light = std::make_shared<AreaLight>(3000, 10.f, s);
 	
 	std::shared_ptr<Sphere> s2 = std::make_shared<Sphere>(glm::vec3(-1, 0, 0), 0.5);
+	s2->material = std::make_shared<Specular>(glm::vec3(0, 1, 0));
+	//s2->material = std::make_shared<Specular>("tex.jpg");
+
+	std::shared_ptr<Sphere> s4 = std::make_shared<Sphere>(glm::vec3(0.2, 0, 0), 0.5);
 	//s2->material = std::make_shared<Diffuse>(glm::vec3(0, 1, 0));
-	s2->material = std::make_shared<Diffuse>("tex.jpg");
+	s4->material = std::make_shared<Specular>(glm::vec3(1,0,0));
 	
 	std::shared_ptr<Sphere> s3 = std::make_shared<Sphere>(glm::vec3(0, 20.5, 0), 20);
-	s3->material = std::make_shared<Diffuse>(glm::vec3(0.9));
+	s3->material = std::make_shared<Diffuse>(glm::vec3(0.3,0.3,1));
 	
 	scene.addShape(s);
 	scene.addShape(s2);
 	scene.addShape(s3);
+	scene.addShape(s4);
 
-	scene.addSky(std::make_shared<Sky>(2000, 1.f));
+	scene.addSky(std::make_shared<Sky>(4000, 1.f));
 	
 	scene.build();
 }

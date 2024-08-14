@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <complex>
 #include "../camera.h"
 
 inline float lerp(float t, float min, float max) {
@@ -14,6 +15,17 @@ inline glm::vec3 sphericalDirection(float sinTheta, float cosTheta, float phi) {
 	return glm::vec3(sinTheta * std::cos(phi),
 					 sinTheta* std::sin(phi),
 				     cosTheta);
+}
+
+inline float fresnelComplex(float cosTheta_i, std::complex<float> eta) {
+	using Complex = std::complex<float>;
+	cosTheta_i = glm::clamp(cosTheta_i, 0.f, 1.f);
+	float sin2Theta_i = 1 - cosTheta_i* cosTheta_i;
+	Complex sin2Theta_t = sin2Theta_i / (eta* eta);
+	Complex cosTheta_t = std::sqrt(1.f - sin2Theta_t);
+	Complex r_parl = (eta* cosTheta_i - cosTheta_t) / (eta* cosTheta_i + cosTheta_t);
+	Complex r_perp = (cosTheta_i - eta * cosTheta_t) / (cosTheta_i + eta * cosTheta_t);
+	return (std::norm(r_parl) + std::norm(r_perp)) / 2.f;
 }
 
 inline glm::mat3 xyz_to_rgb = glm::mat3(
