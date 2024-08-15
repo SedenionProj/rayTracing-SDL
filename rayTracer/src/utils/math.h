@@ -28,10 +28,57 @@ inline float fresnelComplex(float cosTheta_i, std::complex<float> eta) {
 	return (std::norm(r_parl) + std::norm(r_perp)) / 2.f;
 }
 
+inline float fresnelDielectric(float cosTheta_i, float eta) {
+	cosTheta_i = glm::clamp(cosTheta_i, -1.f, 1.f);
+	if (cosTheta_i < 0) {
+		eta = 1 / eta;
+		cosTheta_i = -cosTheta_i;
+	} 
+
+	float sin2Theta_i = 1 - cosTheta_i* cosTheta_i;
+	float sin2Theta_t = sin2Theta_i / (eta* eta);
+	if (sin2Theta_t >= 1)
+		return 1.f;
+	float cosTheta_t = glm::sqrt(1.f - sin2Theta_t);
+
+
+	float r_parl = (eta* cosTheta_i - cosTheta_t) / (eta* cosTheta_i + cosTheta_t);
+	float r_perp = (cosTheta_i - eta * cosTheta_t) / (cosTheta_i + eta * cosTheta_t);
+
+
+	return (r_parl* r_parl + r_perp* r_perp) / 2;
+}
+
 inline glm::mat3 xyz_to_rgb = glm::mat3(
 	glm::vec3(3.2406, -0.9689, 0.0557),
 	glm::vec3(-1.5372, 1.8758, -0.2040),
 	glm::vec3(-0.4986, 0.0415, 1.0570));
+
+inline bool refract(glm::vec3 wi, glm::vec3 n, float eta, float* etap, glm::vec3* wt) {
+	float cosTheta_i = glm::dot(n, wi);
+	// Potentially flip interface orientation for Snell's law
+	if (cosTheta_i < 0) {
+		eta = 1 / eta;
+		cosTheta_i = -cosTheta_i;
+		n = -n;
+	}
+
+	// Compute $\cos\,\theta_\roman{t}$ using Snell's law
+	float sin2Theta_i = glm::max(0.f, 1 - (cosTheta_i* cosTheta_i));
+	float sin2Theta_t = sin2Theta_i / (eta* eta);
+	// Handle total internal reflection case
+	if (sin2Theta_t >= 1)
+		return false;
+
+	float cosTheta_t = glm::sqrt(1 - sin2Theta_t);
+
+	*wt =  - wi / eta + (cosTheta_i / eta - cosTheta_t) * n;
+	// Provide relative IOR along ray to caller
+	if (etap)
+		*etap = eta;
+
+	return true;
+}
 
 class AABB {
 public:

@@ -49,7 +49,24 @@ public:
 	Specular(const char* path)
 		: m_texture(std::make_unique<ImageTexture>(path)) {}
 
-	float BSDF_f(glm::vec3 wo, glm::vec3 wi, HitInfo& rec, WaveLength lambda) override;
+	float BSDF_f(glm::vec3 wo, glm::vec3 wi, HitInfo& rec, WaveLength lambda) override { return 0.f; }
+
+	BSDFSample SampleBSDF(const glm::vec3& woTr, const glm::vec3& n, Sampler& sampler, HitInfo& rec, WaveLength lambda) override;
+
+	bool isBSDFSpecular() override { return true; }
+private:
+	std::unique_ptr<Texture> m_texture;
+};
+
+class Dielectric : public Material {
+public:
+	Dielectric(const glm::vec3& color)
+		: m_texture(std::make_unique<ColorTexture>(color)) {}
+
+	Dielectric(const char* path)
+		: m_texture(std::make_unique<ImageTexture>(path)) {}
+
+	float BSDF_f(glm::vec3 wo, glm::vec3 wi, HitInfo& rec, WaveLength lambda) override { return 0.f;}
 
 	BSDFSample SampleBSDF(const glm::vec3& woTr, const glm::vec3& n, Sampler& sampler, HitInfo& rec, WaveLength lambda) override;
 
