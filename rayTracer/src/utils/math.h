@@ -80,6 +80,11 @@ inline bool refract(glm::vec3 wi, glm::vec3 n, float eta, float* etap, glm::vec3
 	return true;
 }
 
+inline float PowerHeuristic(int nf, float fPdf, int ng, float gPdf) {
+	float f = nf * fPdf, g = ng * gPdf;
+	return f*f / ((f*f) + (g*g));
+}
+
 class AABB {
 public:
 	AABB() : bMin{}, bMax{} {}

@@ -62,7 +62,7 @@ private:
 		WaveLength lambda(sampler);
 		HitInfo rec{};
 
-		float col = simplePathTracer(rec, lambda, ray, sampler, 5);
+		float col = NEEPathTracer(rec, lambda, ray, sampler, 5);
 
 		float x = X(lambda);
 		float y = Y(lambda);
@@ -124,7 +124,7 @@ private:
 		return L;
 	}
 
-	float simplePathTracer(HitInfo& rec, const WaveLength& lambda, Ray& ray, Sampler& sampler, int depth) {
+	float NEEPathTracer(HitInfo& rec, const WaveLength& lambda, Ray& ray, Sampler& sampler, int depth) {
 		float L = 0;
 		float beta = 1;
 		bool isSpecularBounce = true; // specular bounce
@@ -163,6 +163,73 @@ private:
 			ray.direction = bs.wi;
 
 			isSpecularBounce = rec.material->isBSDFSpecular();
+		}
+
+		return L;
+	}
+
+	float MISPathTracer(HitInfo& rec, const WaveLength& lambda, Ray& ray, Sampler& sampler, int depth) {
+		float L = 0;
+		float beta = 1;
+		bool isSpecularBounce = true; // specular bounce
+		float p_b, etaScale = 1;
+
+		while (true) {
+			if (!scene.intersect(ray, rec)) {
+				if (isSpecularBounce)
+					L += beta * scene.sky->Le(lambda);
+				else {
+					float p_l = scene.pmf() * scene.sky->LiPDF(rec.pos, ray.direction);
+					float w_b = PowerHeuristic(1, p_b, 1, p_l);
+					L += beta * w_b * scene.sky->Le(lambda);
+				}
+				break;
+			}
+
+			float Le = rec.Le(lambda);
+			if (Le) {
+				if (isSpecularBounce) {
+					L += beta * Le;
+				}
+				else {
+					float p_l = scene.pmf() * rec.light->LiPDF(ray.origin, ray.direction);
+					float w_l = PowerHeuristic(1, p_b, 1, p_l);
+			
+					L += beta * w_l * Le;
+				}
+			}
+			
+			if (depth-- == 0) {
+				break;
+			}
+
+			glm::vec3 wo = -ray.direction;
+			if (!rec.material->isBSDFSpecular() ) {
+				auto sampledLight = scene.sampleLight(sampler.get1D());
+				LightSample ls = sampledLight->sampleLi(sampler.get2D(), rec.pos, lambda);
+				if (glm::length2(ls.pos - rec.pos) > 0.00001 && ls.L && ls.pdf > 0.f) {
+					float f = rec.material->BSDF_f(wo, ls.wi, rec, lambda) * glm::abs(glm::dot(ls.wi, rec.normal));
+					if (f != 0 && unoccluded(rec.pos, ls.pos)) {
+						float p_l = (ls.pdf * scene.pmf());
+						p_b = rec.material->pdfBSDF(wo, ls.wi, rec.normal);
+						float w_l = PowerHeuristic(1, p_l, 1, p_b);
+						L += beta * w_l * ls.L * f  / p_l;
+					}
+				}
+			}
+			
+
+			BSDFSample bs = rec.material->SampleBSDF(wo, rec.normal, sampler, rec, lambda);
+			if (!bs.f || bs.pdf == 0 || bs.wi.z == 0) {
+				break;
+			}
+			beta *= bs.f * glm::abs(glm::dot(bs.wi, rec.normal)) / bs.pdf;
+			isSpecularBounce = rec.material->isBSDFSpecular();
+			p_b = rec.material->pdfBSDF(wo, bs.wi, rec.normal);
+
+			ray.origin = rec.pos;
+			ray.direction = bs.wi;
+
 		}
 
 		return L;

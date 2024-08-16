@@ -13,6 +13,11 @@ LightSample Sky::sampleLi(glm::vec2 sample, glm::vec3 pos, float lambda)
 	return {Le(lambda), wi, 1.f/(4.f*PI), wi*1000000.f};
 }
 
+float Sky::LiPDF(glm::vec3 pos, glm::vec3 wi)
+{
+	return 1.f / (4.f * PI);
+}
+
 float Sky::Le(float lambda) {
 	return m_power * (*m_spec)(lambda);
 }
@@ -26,6 +31,10 @@ LightSample AreaLight::sampleLi(glm::vec2 sample, glm::vec3 pos, float lambda) {
 	glm::vec3 wi = glm::normalize(Lp - pos);
 	float Lemit = Le(lambda);
 	return LightSample{ Lemit, wi, pdf,Lp };
+}
+
+float AreaLight::LiPDF(glm::vec3 pos, glm::vec3 wi) {
+	return 0;
 }
 
 float AreaLight::Le(float lambda) {

@@ -20,6 +20,21 @@ BSDFSample Diffuse::SampleBSDF(const glm::vec3& woTr, const glm::vec3& n, Sample
 	return { m_texture->eval(lambda, rec.uv) / PI,wi, pdf };
 }
 
+float Diffuse::pdfBSDF(glm::vec3 woTr, glm::vec3 wiTr, glm::vec3 n)
+{
+	CoordinateSystem cs(n);
+	glm::vec3 wo = cs.invTransform(woTr);
+	glm::vec3 wi = cs.invTransform(woTr);
+
+	if (!wo.z * wi.z > 0) {
+		return 0;
+	}
+	//std::cout << wo.z * wi.z << "\n";
+
+	return glm::abs(wi.z) / PI;
+}
+
+// todo custom eta and k and roughness
 
 BSDFSample Specular::SampleBSDF(const glm::vec3& woTr, const glm::vec3& n, Sampler& sampler, HitInfo& rec, WaveLength lambda)
 {
@@ -28,7 +43,6 @@ BSDFSample Specular::SampleBSDF(const glm::vec3& woTr, const glm::vec3& n, Sampl
 
 	glm::vec3 wi = glm::vec3(-wo.x, -wo.y, wo.z);
 
-	// todo custom eta and k and roughness
 	float refl = glm::clamp(m_texture->eval(lambda, rec.uv),0.f,.9999f);
 	float eta = 1;
 	float k = 2 * glm::sqrt(refl) / glm::sqrt(glm::max(0.f,1 - refl));
@@ -37,6 +51,11 @@ BSDFSample Specular::SampleBSDF(const glm::vec3& woTr, const glm::vec3& n, Sampl
 
 	wi = cs.transform(wi);
 	return { f ,wi, 1.f };
+}
+
+float Specular::pdfBSDF(glm::vec3 woTr, glm::vec3 wi, glm::vec3 n)
+{
+	return 0;
 }
 
 BSDFSample Dielectric::SampleBSDF(const glm::vec3& woTr, const glm::vec3& n, Sampler& sampler, HitInfo& rec, WaveLength lambda)
@@ -72,4 +91,9 @@ BSDFSample Dielectric::SampleBSDF(const glm::vec3& woTr, const glm::vec3& n, Sam
 		wi = cs.transform(wi);
 		return { ft, wi, pt / (pr + pt) };
 	}
+}
+
+float Dielectric::pdfBSDF(glm::vec3 woTr, glm::vec3 wi, glm::vec3 n)
+{
+	return 0;
 }
