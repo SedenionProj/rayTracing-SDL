@@ -1,7 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <complex>
-#include "../camera.h"
 
 inline float lerp(float t, float min, float max) {
 	return (1.f - t) * min + t * max;
@@ -54,6 +53,20 @@ inline glm::mat3 xyz_to_rgb = glm::mat3(
 	glm::vec3(-1.5372, 1.8758, -0.2040),
 	glm::vec3(-0.4986, 0.0415, 1.0570));
 
+inline glm::mat3 rotateX(float a) {
+	return glm::mat3(
+		glm::vec3(1, 0, 0),
+		glm::vec3(0, glm::cos(a), -glm::sin(a)),
+		glm::vec3(0, glm::sin(a), glm::cos(a)));
+}
+
+inline glm::mat3 rotateY(float a) {
+	return glm::mat3(
+		glm::vec3( glm::cos(a), 0, glm::sin(a) ),
+		glm::vec3( 0,1,0),
+		glm::vec3(-glm::sin(a), 0, glm::cos(a)));
+}
+
 inline bool refract(glm::vec3 wi, glm::vec3 n, float eta, float* etap, glm::vec3* wt) {
 	float cosTheta_i = glm::dot(n, wi);
 	// Potentially flip interface orientation for Snell's law
@@ -85,40 +98,7 @@ inline float PowerHeuristic(int nf, float fPdf, int ng, float gPdf) {
 	return f*f / ((f*f) + (g*g));
 }
 
-class AABB {
-public:
-	AABB() : bMin{}, bMax{} {}
 
-	AABB(const AABB& a, const AABB& b)
-		: bMin(glm::vec3(std::min(a.bMin.x, b.bMin.x), std::min(a.bMin.y, b.bMin.y), std::min(a.bMin.z, b.bMin.z))),
-		  bMax(glm::vec3(std::max(a.bMax.x, b.bMax.x), std::max(a.bMax.y, b.bMax.y), std::max(a.bMax.z, b.bMax.z))) {};
-
-	AABB(const glm::vec3& a, const glm::vec3& b)
-		: bMin(glm::vec3(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z))),
-		  bMax(glm::vec3(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z))) {};
-
-	bool intersect(const Ray& ray, float tmin, float tmax) const {
-		for (int a = 0; a < 3; ++a) {
-			float invD = 1.0f / ray.direction[a];
-			float t0 = (bMin[a] - ray.origin[a]) * invD;
-			float t1 = (bMax[a] - ray.origin[a]) * invD;
-			if (invD < 0.0f) {
-				std::swap(t0, t1);
-			}
-
-			tmin = std::max(t0, tmin);
-			tmax = std::min(t1, tmax);
-
-			if (tmax <= tmin)
-				return false;
-		}
-
-		return true;
-	}
-
-	glm::vec3 bMin;
-	glm::vec3 bMax;
-};
 
 class CoordinateSystem {
 public:

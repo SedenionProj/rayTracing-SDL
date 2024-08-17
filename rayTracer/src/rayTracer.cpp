@@ -2,7 +2,7 @@
 
 Application::Application(unsigned int width, unsigned int height)
 	:width(width), height(height), isRunning(true),
-	camera(glm::vec3(-0.2, -0.2, 2), glm::vec3(0, 0, -1), glm::vec2(width, height)),
+	camera(glm::vec3(0, 0, -2), glm::vec3(0, 0, 1), glm::vec2(width, height)),
 	renderer(scene, camera)
 {
 	initScene();
@@ -62,62 +62,51 @@ void Application::start() {
 }
 
 void Application::event(SDL_Event& event) {
-	// todo rotation
 	if (event.type == SDL_QUIT) {
 		isRunning = false;
 	}
 	if (event.type == SDL_KEYDOWN) {
 		isMoving = true;
-		switch (event.key.keysym.sym) {
-		case SDLK_z:
-			camera.position -= glm::vec3(0,0,0.1);
-			break;
-		case SDLK_s:
-			camera.position -= glm::vec3(0, 0, -0.1);
-			break;
-		case SDLK_q:
-			camera.position -= glm::vec3(-0.1, 0,0 );
-			break;
-		case SDLK_d:
-			camera.position -= glm::vec3(0.1, 0, 0);
-			break;
-		case SDLK_SPACE:
-			camera.position -= glm::vec3(0, 0.1, 0);
-			break;
-		case SDLK_LSHIFT:
-			camera.position -= glm::vec3(0, -0.1, 0);
-			break;
-		}
-		
+		auto& k = event.key.keysym.sym;
+		if(k == SDLK_z)
+			camera.position += glm::vec3(0,0,0.1);
+		if (k == SDLK_s)
+			camera.position += glm::vec3(0, 0, -0.1);
+		if (k == SDLK_q)
+			camera.position += glm::vec3(-0.1, 0, 0);
+		if (k == SDLK_d)
+			camera.position += glm::vec3(0.1, 0, 0);
+		if (k == SDLK_SPACE)
+			camera.position += glm::vec3(0, 0.1, 0);
+		if (k == SDLK_LSHIFT)
+			camera.position += glm::vec3(0, -0.1, 0);
+		if (k == SDLK_LEFT)
+			camera.direction = rotateY(0.1f) * camera.direction;
+		if (k == SDLK_RIGHT)
+			camera.direction = rotateY(-0.1f) * camera.direction;
+		if (k == SDLK_UP)
+			camera.direction = rotateX(0.1f) * camera.direction;
+		if (k == SDLK_DOWN)
+			camera.direction = rotateX(-0.1f) * camera.direction;
 	}
 }
 
 void Application::initScene() {
 	camera.vfov = 90;
 	
-	std::shared_ptr<Sphere> s = std::make_shared<Sphere>(glm::vec3(-1, -2, 0), 0.5f);
+	std::shared_ptr<Sphere> s = std::make_shared<Sphere>(glm::vec3(0, 0, 0), 0.5f);
 	s->material = std::make_shared<Diffuse>(glm::vec3(1, 1, 0));
-	//s->light = std::make_shared<AreaLight>(4000, 100.f, s);
+	s->light = std::make_shared<AreaLight>(4000, 10.f, s);
 	
-	std::shared_ptr<Sphere> s2 = std::make_shared<Sphere>(glm::vec3(-1., 0, 0), 0.5);
-	s2->material = std::make_shared<Dielectric>(glm::vec3(1,0,0));
-	//s2->light = std::make_shared<AreaLight>(3000, 3.f, s2);
-	//s2->material = std::make_shared<Specular>("tex.jpg");
-
-	std::shared_ptr<Sphere> s4 = std::make_shared<Sphere>(glm::vec3(0.2, 0, 0), 0.5);
-	//s2->material = std::make_shared<Diffuse>(glm::vec3(0, 1, 0));
-	s4->material = std::make_shared<Specular>(glm::vec3(1,0,0));
-	
-	std::shared_ptr<Sphere> s3 = std::make_shared<Sphere>(glm::vec3(0, 100.5, 0), 100);
-	s3->material = std::make_shared<Diffuse>(glm::vec3(0.3,0.3,1));
-	//s3->material = std::make_shared<Diffuse>("tex.jpg");
+	std::shared_ptr<Sphere> s3 = std::make_shared<Sphere>(glm::vec3(0, -10.5, 0), 10);
+	s3->material = std::make_shared<Diffuse>(glm::vec3(1.f));
 	
 	scene.addShape(s);
-	scene.addShape(s2);
+	//scene.addShape(s2);
 	scene.addShape(s3);
-	scene.addShape(s4);
+	//scene.addShape(s4);
 
-	scene.addSky(std::make_shared<Sky>(5000, 5.f));
+	scene.addSky(std::make_shared<Sky>(5000, .5f));
 	
 	scene.build();
 }

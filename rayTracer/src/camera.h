@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "utils/sample.h"
-#include "utils/sample.h"
+#include "utils/math.h"
 
 class Ray {
 public:
@@ -42,11 +42,12 @@ public:
 		film(resolution), position(position), direction(direction) {}
 
 	Ray getRay(glm::uvec2 pixelCoord, Sampler& sampler) const {
+		
 		float focalLength = 1.;
 
 		glm::vec3 fixedUp = glm::vec3(0, 1, 0);
 		glm::vec3 front =   glm::normalize(direction);
-		glm::vec3 right =  -glm::normalize(glm::cross(front, fixedUp));
+		glm::vec3 right =  glm::normalize(glm::cross(front, fixedUp));
 		glm::vec3 up = cross(front, right);
 
 		float h = focalLength * glm::tan(glm::radians(vfov) / 2.);
@@ -57,7 +58,7 @@ public:
 		Ray ray;
 		ray.origin = position;		
 		ray.direction = glm::normalize(
-			h * uv.x * right + 
+			-h * uv.x * right + 
 			h * uv.y * up + 
 			front * focalLength);
 		return ray;

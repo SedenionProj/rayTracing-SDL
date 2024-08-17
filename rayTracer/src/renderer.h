@@ -62,7 +62,7 @@ private:
 		WaveLength lambda(sampler);
 		HitInfo rec{};
 
-		float col = NEEPathTracer(rec, lambda, ray, sampler, 5);
+		float col = MISPathTracer(rec, lambda, ray, sampler, 5);
 
 		float x = X(lambda);
 		float y = Y(lambda);
@@ -194,7 +194,6 @@ private:
 				else {
 					float p_l = scene.pmf() * rec.light->LiPDF(ray.origin, ray.direction);
 					float w_l = PowerHeuristic(1, p_b, 1, p_l);
-			
 					L += beta * w_l * Le;
 				}
 			}
@@ -229,7 +228,6 @@ private:
 
 			ray.origin = rec.pos;
 			ray.direction = bs.wi;
-
 		}
 
 		return L;

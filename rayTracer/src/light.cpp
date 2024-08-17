@@ -34,7 +34,7 @@ LightSample AreaLight::sampleLi(glm::vec2 sample, glm::vec3 pos, float lambda) {
 }
 
 float AreaLight::LiPDF(glm::vec3 pos, glm::vec3 wi) {
-	return 0;
+	return m_shape->pdf(pos, wi);
 }
 
 float AreaLight::Le(float lambda) {
