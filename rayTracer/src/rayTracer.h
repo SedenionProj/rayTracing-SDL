@@ -5,13 +5,14 @@
 #include <execution>
 #include <stdio.h>
 
-#include "SDL.h" 
+#include "SDL.h"
 #include "rayTracer.h"
 #include "renderer.h"
 #include "spectrum.h"
 #include "camera.h"
 #include "shape.h"
 #include "renderer.h"
+#include "importScene.h"
 
 class Application {
 public:

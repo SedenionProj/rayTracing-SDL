@@ -39,10 +39,9 @@ struct Film {
 class Camera {
 public:
 	Camera(const glm::vec3& position, const glm::vec3& direction, const glm::vec2 resolution):
-		film(resolution), position(position), direction(direction) {}
+		film(resolution), position(position), direction(direction), spp(2,2) {}
 
 	Ray getRay(glm::uvec2 pixelCoord, Sampler& sampler) const {
-		
 		float focalLength = 1.;
 
 		glm::vec3 fixedUp = glm::vec3(0, 1, 0);
@@ -64,13 +63,14 @@ public:
 		return ray;
 	}
 
+	void update() { film.totalSamplesNB += spp.x * spp.y; }
+
+public:
 	glm::vec3 position;
 	glm::vec3 direction;
-	float vfov = 90;
-
+	glm::vec2 spp;
 	Film film;
-
-	
+	float vfov = 90;
 
 private:
 	glm::vec2 antiAliasingOffset(Sampler& sampler) const {

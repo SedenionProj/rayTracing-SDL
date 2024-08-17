@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <iostream>
-
+#include <assimp/scene.h>  
 #include "camera.h"
 #include "material.h"
 #include "spectrum.h"
@@ -81,9 +81,9 @@ class Sphere : public Shape {
 public:
     Sphere(const glm::vec3& origin, const float radius);
 
-    bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.01f, float tMax = MAX_FLOAT) override;
+    bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.0001f, float tMax = MAX_FLOAT) override;
     
-	std::tuple<glm::vec3, float> sample(glm::vec2 sample, glm::vec3 pos) {
+	std::tuple<glm::vec3, float> sample(glm::vec2 sample, glm::vec3 pos) override {
 		// todo sample inside sphere
 		float sinThetaMax = r / glm::distance(pos, origin);
 		float sin2ThetaMax = sinThetaMax * sinThetaMax;
@@ -105,17 +105,51 @@ public:
 		return { p, 1.f / (2.f * PI * oneMinusCosThetaMax) };
 	}
 
-	float pdf(glm::vec3 pos, glm::vec3 wi) {
+	float pdf(glm::vec3 pos, glm::vec3 wi) override {
 		float sinThetaMax = r / glm::distance(pos, origin);
 		float sin2ThetaMax = sinThetaMax * sinThetaMax;
-		float cosThetaMax = glm::sqrt(1 - sin2ThetaMax);
+		float cosThetaMax = glm::sqrt(glm::max(0.f,1 - sin2ThetaMax));
 		float oneMinusCosThetaMax = 1 - cosThetaMax;
+
+		//if (std::isnan(cosThetaMax))
+		//	std::cout << pos.x << pos.y << pos.z <<" f \n";
+
 		return 1.f / (2.f * PI * oneMinusCosThetaMax);
 	}
 
 private:
     float r;
     glm::vec3 origin;
+};
+
+
+class Triangle : public Shape {
+public:
+	Triangle(int id) 
+		: m_id(id) {
+		aiFace face = m_mesh->mFaces[m_id];
+		int id0 = face.mIndices[0], id1 = face.mIndices[1], id2 = face.mIndices[2];
+		aiVector3D vp0 = m_mesh->mVertices[id0], vp1 = m_mesh->mVertices[id1], vp2 = m_mesh->mVertices[id2];
+		glm::vec3 v0 = glm::vec3(vp0.x, vp0.y, vp0.z);
+		glm::vec3 v1 = glm::vec3(vp1.x, vp1.y, vp1.z);
+		glm::vec3 v2 = glm::vec3(vp2.x, vp2.y, vp2.z);
+
+		boundingBox = AABB(v0+glm::vec3(0,0,0), v0 + (v1 - v0) * 1.001f + (v2 - v0) * 1.001f);
+	};
+
+	bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.0001f, float tMax = MAX_FLOAT) override;
+
+	std::tuple<glm::vec3, float> sample(glm::vec2 sample, glm::vec3 pos) override {
+		return { {0, 0, 0}, 1 };
+	}
+
+	float pdf(glm::vec3 pos, glm::vec3 wi) override {
+		return 1;
+	}
+	static aiMesh* m_mesh;
+
+private:
+	int m_id;
 };
 
 class BVHNode : public Object {
@@ -140,7 +174,7 @@ public:
 		boundingBox = AABB(left->boundingBox, right->boundingBox);
 	}
 
-	bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.01f, float tMax = MAX_FLOAT) {
+	bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.01f, float tMax = MAX_FLOAT) override {
 		if (!boundingBox.intersect(ray, tMin, tMax))
 			return false;
 			
@@ -175,7 +209,7 @@ private:
 
 class Scene : public Object {
 public:
-	bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.001f, float tMax = MAX_FLOAT);
+	bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.001f, float tMax = MAX_FLOAT) override;
 	void build();
 	void addShape(const std::shared_ptr<Shape> obj);
 	void addSky(const std::shared_ptr<Sky> skyLight);

@@ -6,15 +6,13 @@
 Sky::Sky(float T, float power) :
 		m_spec(new BlackBodySpectrum(T)), m_power(power) {}
 
-LightSample Sky::sampleLi(glm::vec2 sample, glm::vec3 pos, float lambda)
-{
+LightSample Sky::sampleLi(glm::vec2 sample, glm::vec3 pos, float lambda){
 	glm::vec3 wi = SampleUniformSphere(sample);
 
 	return {Le(lambda), wi, 1.f/(4.f*PI), wi*1000000.f};
 }
 
-float Sky::LiPDF(glm::vec3 pos, glm::vec3 wi)
-{
+float Sky::LiPDF(glm::vec3 pos, glm::vec3 wi){
 	return 1.f / (4.f * PI);
 }
 

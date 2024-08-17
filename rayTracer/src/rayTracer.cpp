@@ -1,5 +1,7 @@
 #include "rayTracer.h"
 
+Assimp::Importer importer;
+
 Application::Application(unsigned int width, unsigned int height)
 	:width(width), height(height), isRunning(true),
 	camera(glm::vec3(0, 0, -2), glm::vec3(0, 0, 1), glm::vec2(width, height)),
@@ -91,10 +93,13 @@ void Application::event(SDL_Event& event) {
 	}
 }
 
+
 void Application::initScene() {
 	camera.vfov = 90;
 	
-	std::shared_ptr<Sphere> s = std::make_shared<Sphere>(glm::vec3(0, 0, 0), 0.5f);
+	
+
+	std::shared_ptr<Sphere> s = std::make_shared<Sphere>(glm::vec3(0, 1, 0), 0.5f);
 	s->material = std::make_shared<Diffuse>(glm::vec3(1, 1, 0));
 	s->light = std::make_shared<AreaLight>(4000, 10.f, s);
 	
@@ -106,12 +111,13 @@ void Application::initScene() {
 	scene.addShape(s3);
 	//scene.addShape(s4);
 
-	scene.addSky(std::make_shared<Sky>(5000, .5f));
+	scene.addSky(std::make_shared<Sky>(5000, 0.f));
 	
+	importMesh("tore.obj", scene);
+
 	scene.build();
 }
 
 void Application::loop(float dt) {
-	//std::cout << dt << "\n";
 	renderer.render(isMoving, gSurface);
 }

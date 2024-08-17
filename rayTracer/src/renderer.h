@@ -3,13 +3,12 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
+#include <cmath>
 #include "camera.h"
 #include "shape.h"
-#include "utils/sample.h"
 #include "spectrum.h"
 #include "utils/sample.h"
-#include "camera.h"
-
+#include "utils/sample.h"
 
 
 class Renderer {
@@ -26,22 +25,23 @@ public:
 
 	void render(bool isMoving, SDL_Surface* gSurface) {
 
-		camera.film.totalSamplesNB += 4;
+		camera.update();
 
 		std::for_each(std::execution::par, verticalIT.begin(), verticalIT.end(), [&](int y) {
 			std::for_each(std::execution::par, horizontalIT.begin(), horizontalIT.end(), [&, y](int x) {
 
 				glm::uvec2 pixelPos = glm::uvec2(x, y);
 
-				IndependantSampler sampler(4);
-				//StratifiedSampler sampler(2,2);
+				IndependantSampler sampler(camera.spp.x* camera.spp.x);
+				//StratifiedSampler sampler(camera.spp.x, camera.spp.y);
 
 				for (int i = 0; i < sampler.samplesPerPixel(); i++) {
 					sampler.startSample(pixelPos, i, camera.film.totalSamplesNB);
+					glm::vec3 sample = renderPixel(sampler, pixelPos);
 					if (isMoving)
-						camera.film.setSample(pixelPos, renderPixel(sampler, pixelPos));
+						camera.film.setSample(pixelPos, sample);
 					else
-						camera.film.addSample(pixelPos, renderPixel(sampler, pixelPos));
+						camera.film.addSample(pixelPos, sample);
 				}
 
 				glm::vec3 rgb_color = xyz_to_rgb * (camera.film.getSample(pixelPos) / (float)camera.film.totalSamplesNB);
@@ -56,13 +56,12 @@ public:
 	}
 
 private:
-
 	glm::vec3 renderPixel(Sampler& sampler, const glm::vec2& pixelPos) {
 		Ray ray = camera.getRay(pixelPos, sampler);
 		WaveLength lambda(sampler);
 		HitInfo rec{};
 
-		float col = MISPathTracer(rec, lambda, ray, sampler, 5);
+		float col = NEEPathTracer(rec, lambda, ray, sampler, 5);
 
 		float x = X(lambda);
 		float y = Y(lambda);
@@ -180,7 +179,7 @@ private:
 					L += beta * scene.sky->Le(lambda);
 				else {
 					float p_l = scene.pmf() * scene.sky->LiPDF(rec.pos, ray.direction);
-					float w_b = PowerHeuristic(1, p_b, 1, p_l);
+					float w_b = powerHeuristic(1, p_b, 1, p_l);
 					L += beta * w_b * scene.sky->Le(lambda);
 				}
 				break;
@@ -193,7 +192,7 @@ private:
 				}
 				else {
 					float p_l = scene.pmf() * rec.light->LiPDF(ray.origin, ray.direction);
-					float w_l = PowerHeuristic(1, p_b, 1, p_l);
+					float w_l = powerHeuristic(1, p_b, 1, p_l);
 					L += beta * w_l * Le;
 				}
 			}
@@ -209,9 +208,9 @@ private:
 				if (glm::length2(ls.pos - rec.pos) > 0.00001 && ls.L && ls.pdf > 0.f) {
 					float f = rec.material->BSDF_f(wo, ls.wi, rec, lambda) * glm::abs(glm::dot(ls.wi, rec.normal));
 					if (f != 0 && unoccluded(rec.pos, ls.pos)) {
-						float p_l = (ls.pdf * scene.pmf());
+						float p_l = ls.pdf * scene.pmf();
 						p_b = rec.material->pdfBSDF(wo, ls.wi, rec.normal);
-						float w_l = PowerHeuristic(1, p_l, 1, p_b);
+						float w_l = powerHeuristic(1, p_l, 1, p_b);
 						L += beta * w_l * ls.L * f  / p_l;
 					}
 				}

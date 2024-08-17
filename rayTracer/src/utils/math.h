@@ -6,7 +6,7 @@ inline float lerp(float t, float min, float max) {
 	return (1.f - t) * min + t * max;
 }
 
-inline glm::vec3 orientNormal(glm::vec3& normal, glm::vec3& direction) {
+inline glm::vec3 orientNormal(const glm::vec3& normal, const glm::vec3& direction) {
 	return  glm::dot(normal, direction) < 0.f ? normal: -normal;
 }
 
@@ -69,36 +69,32 @@ inline glm::mat3 rotateY(float a) {
 
 inline bool refract(glm::vec3 wi, glm::vec3 n, float eta, float* etap, glm::vec3* wt) {
 	float cosTheta_i = glm::dot(n, wi);
-	// Potentially flip interface orientation for Snell's law
 	if (cosTheta_i < 0) {
 		eta = 1 / eta;
 		cosTheta_i = -cosTheta_i;
 		n = -n;
 	}
 
-	// Compute $\cos\,\theta_\roman{t}$ using Snell's law
 	float sin2Theta_i = glm::max(0.f, 1 - (cosTheta_i* cosTheta_i));
 	float sin2Theta_t = sin2Theta_i / (eta* eta);
-	// Handle total internal reflection case
+
 	if (sin2Theta_t >= 1)
 		return false;
 
 	float cosTheta_t = glm::sqrt(1 - sin2Theta_t);
 
 	*wt =  - wi / eta + (cosTheta_i / eta - cosTheta_t) * n;
-	// Provide relative IOR along ray to caller
+
 	if (etap)
 		*etap = eta;
 
 	return true;
 }
 
-inline float PowerHeuristic(int nf, float fPdf, int ng, float gPdf) {
+inline float powerHeuristic(int nf, float fPdf, int ng, float gPdf) {
 	float f = nf * fPdf, g = ng * gPdf;
 	return f*f / ((f*f) + (g*g));
 }
-
-
 
 class CoordinateSystem {
 public:

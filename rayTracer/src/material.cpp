@@ -1,8 +1,7 @@
 #include "material.h"
 #include "spectrum.h"
 
-float Diffuse::BSDF_f(glm::vec3 wo, glm::vec3 wi, HitInfo& rec,WaveLength lambda)
-{
+float Diffuse::BSDF_f(glm::vec3 wo, glm::vec3 wi, HitInfo& rec,WaveLength lambda) {
 	if (glm::dot(wi, rec.normal) < 0) {
 		return 0;
 	}
