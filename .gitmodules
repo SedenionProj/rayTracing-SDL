@@ -1,3 +1,6 @@
 [submodule "rayTracer/vendor/glm"]
 	path = rayTracer/vendor/glm
 	url = https://github.com/g-truc/glm.git
+[submodule "rayTracer/vendor/assimp"]
+	path = rayTracer/vendor/assimp
+	url = https://github.com/assimp/assimp
