@@ -96,12 +96,10 @@ void Application::event(SDL_Event& event) {
 
 void Application::initScene() {
 	camera.vfov = 90;
-	
-	
 
-	std::shared_ptr<Sphere> s = std::make_shared<Sphere>(glm::vec3(0, 1, 0), 0.5f);
+	std::shared_ptr<Sphere> s = std::make_shared<Sphere>(glm::vec3(0, 2, 0), 1.f);
 	s->material = std::make_shared<Diffuse>(glm::vec3(1, 1, 0));
-	s->light = std::make_shared<AreaLight>(4000, 10.f, s);
+	s->light = std::make_shared<AreaLight>(7000, 5.f, s);
 	
 	std::shared_ptr<Sphere> s3 = std::make_shared<Sphere>(glm::vec3(0, -10.5, 0), 10);
 	s3->material = std::make_shared<Diffuse>(glm::vec3(1.f));

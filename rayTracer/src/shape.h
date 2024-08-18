@@ -81,7 +81,7 @@ class Sphere : public Shape {
 public:
     Sphere(const glm::vec3& origin, const float radius);
 
-    bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.0001f, float tMax = MAX_FLOAT) override;
+    bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.001f, float tMax = MAX_FLOAT) override;
     
 	std::tuple<glm::vec3, float> sample(glm::vec2 sample, glm::vec3 pos) override {
 		// todo sample inside sphere
@@ -134,7 +134,17 @@ public:
 		glm::vec3 v1 = glm::vec3(vp1.x, vp1.y, vp1.z);
 		glm::vec3 v2 = glm::vec3(vp2.x, vp2.y, vp2.z);
 
-		boundingBox = AABB(v0+glm::vec3(0,0,0), v0 + (v1 - v0) * 1.001f + (v2 - v0) * 1.001f);
+		glm::vec3 min, max;
+
+		min.x = std::min({ v0.x, v1.x, v2.x });
+		min.y = std::min({ v0.y, v1.y, v2.y });
+		min.z = std::min({ v0.z, v1.z, v2.z });
+
+		max.x = std::max({ v0.x, v1.x, v2.x });
+		max.y = std::max({ v0.y, v1.y, v2.y });
+		max.z = std::max({ v0.z, v1.z, v2.z });
+
+		boundingBox = AABB(min, max);
 	};
 
 	bool intersect(Ray& ray, HitInfo& rec, float tMin = 0.0001f, float tMax = MAX_FLOAT) override;

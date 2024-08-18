@@ -61,13 +61,15 @@ private:
 		WaveLength lambda(sampler);
 		HitInfo rec{};
 
-		float col = NEEPathTracer(rec, lambda, ray, sampler, 5);
-
+		float col = NEEPathTracer(rec, lambda, ray, sampler, 20);
+		
 		float x = X(lambda);
 		float y = Y(lambda);
 		float z = Z(lambda);
-
+		
 		return glm::vec3(x, y, z) * col;
+
+		//return debugPathTracer(rec, lambda, ray, sampler, 5);
 	}
 
 	float naivePathTracerRecursive(HitInfo& rec, const WaveLength& lambda, Ray& ray, Sampler& sampler, int depth) {
@@ -228,6 +230,18 @@ private:
 			ray.origin = rec.pos;
 			ray.direction = bs.wi;
 		}
+
+		return L;
+	}
+
+	glm::vec3 debugPathTracer(HitInfo& rec, const WaveLength& lambda, Ray& ray, Sampler& sampler, int depth) {
+		glm::vec3 L = glm::vec3(0);
+
+		if (!scene.intersect(ray, rec)) {
+			return glm::vec3(0.1,0,0.1);
+		}
+
+		L += (rec.normal+1.f)*0.25f;
 
 		return L;
 	}

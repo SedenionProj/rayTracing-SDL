@@ -107,9 +107,9 @@ bool Triangle::intersect(Ray& ray, HitInfo& rec, float tMin , float tMax)
 		return false;
 	}
 
-	rec.normal = orientNormal(glm::cross(v0v1, v0v2), ray.direction);
-	rec.t = t;
-	rec.pos = ray.at(t);
+	rec.normal = orientNormal(glm::normalize(glm::cross(v0v1, v0v2)), ray.direction);
+	rec.t = t*0.9;
+	rec.pos = ray.at(t*0.9);
 	rec.material = material;
 	rec.light = light;
 	rec.uv = glm::vec2(u, v);
